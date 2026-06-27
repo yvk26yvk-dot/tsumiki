@@ -1,11 +1,11 @@
 {
-  "name": "つみき — 自己肯定感をすこしずつ",
-  "short_name": "つみき",
-  "description": "きょうの自分をすこしだけ認める。日々のアクション記録と週次のふりかえり。",
+  "name": "コウテイちゃん — 今日のあなたを、ぎゅっと",
+  "short_name": "コウテイちゃん",
+  "description": "毎日の小さな問いかけに答えると、コウテイちゃんがあたたかくフィードバック。自己肯定感をすこしずつ育てるアプリ。",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#F6F2EA",
-  "theme_color": "#F6F2EA",
+  "background_color": "#FBF4EF",
+  "theme_color": "#FBF4EF",
   "orientation": "portrait",
   "lang": "ja",
   "icons": [

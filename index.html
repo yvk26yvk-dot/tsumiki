@@ -3,390 +3,361 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#F6F2EA">
+<meta name="theme-color" content="#FBF4EF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="つみき">
+<meta name="apple-mobile-web-app-title" content="コウテイちゃん">
 <link rel="manifest" href="manifest.json">
-<title>つみき — 自己肯定感をすこしずつ</title>
+<title>コウテイちゃん — 今日のあなたを、ぎゅっと</title>
 <style>
   :root{
-    --paper:#F6F2EA;
-    --paper-2:#FDFBF6;
-    --ink:#2E2A24;
-    --ink-soft:#6E665A;
-    --ink-faint:#A39A8B;
-    --sage:#7C8A6B;
-    --sage-deep:#5A6B49;
-    --clay:#C08A63;
-    --clay-deep:#9A6843;
-    --line:rgba(46,42,36,0.10);
-    --line-2:rgba(46,42,36,0.18);
-    --radius:18px;
-    --radius-sm:12px;
-    --shadow:0 1px 0 rgba(46,42,36,0.04);
+    --bg:#FBF4EF; --card:#FFFFFF; --ink:#3A322E; --ink-soft:#8A7E76; --ink-faint:#B9ADA4;
+    --rose:#E0907F; --rose-deep:#C26B58; --rose-soft:#FBEAE4;
+    --leaf:#8FA079; --leaf-deep:#6A7B55; --leaf-soft:#EEF2E7; --gold:#D8A85E;
+    --line:rgba(58,50,46,0.10); --line-2:rgba(58,50,46,0.18);
+    --radius:22px; --radius-sm:14px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
-    background:var(--paper);
-    color:var(--ink);
-    line-height:1.7;
-    -webkit-font-smoothing:antialiased;
-    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  }
-  .app{max-width:520px;margin:0 auto;padding:0 20px 110px;}
-
-  /* header */
-  header{padding:28px 0 8px;text-align:center;}
-  .brand{display:inline-flex;align-items:center;gap:9px;}
-  .brand .mark{display:flex;flex-direction:column;gap:2px;}
-  .brand .mark span{display:block;width:18px;height:7px;border-radius:2px;}
-  .brand .mark span:nth-child(1){background:var(--clay);width:13px;}
-  .brand .mark span:nth-child(2){background:var(--sage);width:18px;}
-  .brand .mark span:nth-child(3){background:var(--ink-faint);width:11px;}
-  .brand h1{font-size:19px;font-weight:600;margin:0;letter-spacing:.04em;}
-  .tagline{font-size:13px;color:var(--ink-soft);margin:4px 0 0;letter-spacing:.02em;}
-
-  /* views */
-  .view{display:none;animation:fade .35s ease;}
-  .view.active{display:block;}
-  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
-
-  .greet{margin:18px 0 22px;}
-  .greet .date{font-size:13px;color:var(--ink-faint);letter-spacing:.06em;}
-  .greet h2{font-size:23px;font-weight:600;margin:3px 0 0;line-height:1.4;}
-
-  .section-label{font-size:13px;color:var(--ink-soft);font-weight:600;letter-spacing:.04em;margin:26px 0 12px;}
-
-  /* action chips */
-  .actions{display:flex;flex-direction:column;gap:10px;}
-  .chip{
-    display:flex;align-items:center;gap:13px;
-    background:var(--paper-2);border:1px solid var(--line);
-    border-radius:var(--radius-sm);padding:14px 16px;cursor:pointer;
-    transition:border-color .18s,background .18s,transform .08s;
-    box-shadow:var(--shadow);
-  }
-  .chip:active{transform:scale(.99);}
-  .chip.on{border-color:var(--sage);background:#F1F4EC;}
-  .chip .box{
-    width:24px;height:24px;border-radius:8px;border:1.8px solid var(--line-2);
-    flex:0 0 auto;display:flex;align-items:center;justify-content:center;
-    transition:all .18s;
-  }
-  .chip.on .box{background:var(--sage);border-color:var(--sage);}
-  .chip .box svg{width:14px;height:14px;opacity:0;transition:opacity .18s;}
-  .chip.on .box svg{opacity:1;}
-  .chip .txt{font-size:15px;line-height:1.45;}
-  .chip .txt small{display:block;font-size:12px;color:var(--ink-faint);margin-top:1px;}
-
-  /* note */
-  textarea{
-    width:100%;font-family:inherit;font-size:15px;line-height:1.7;color:var(--ink);
-    background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius-sm);
-    padding:14px 16px;resize:vertical;min-height:96px;outline:none;
-    transition:border-color .18s;
-  }
-  textarea:focus{border-color:var(--sage);}
-  textarea::placeholder{color:var(--ink-faint);}
-
-  /* mood */
-  .mood{display:flex;justify-content:space-between;gap:8px;margin-top:4px;}
-  .mood button{
-    flex:1;background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius-sm);
-    padding:12px 0;font-size:24px;cursor:pointer;transition:all .16s;line-height:1;
-  }
-  .mood button.on{border-color:var(--clay);background:#FAF0E8;transform:translateY(-2px);}
-
-  /* primary button */
-  .primary{
-    width:100%;background:var(--ink);color:var(--paper-2);border:none;
-    border-radius:var(--radius);padding:16px;font-size:16px;font-weight:600;
-    font-family:inherit;cursor:pointer;margin-top:26px;letter-spacing:.03em;
-    transition:transform .08s,opacity .18s;
-  }
-  .primary:active{transform:scale(.99);}
-  .primary.ghost{background:transparent;color:var(--ink);border:1px solid var(--line-2);}
-  .toast{
-    text-align:center;font-size:14px;color:var(--sage-deep);
-    margin:14px 0 0;min-height:20px;font-weight:600;
-  }
-  .toast.err{color:var(--clay-deep);}
-
-  /* weekly */
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:6px 0 4px;}
-  .stat{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:15px 12px;text-align:center;}
-  .stat .n{font-size:27px;font-weight:600;line-height:1;letter-spacing:-.01em;}
-  .stat .n.sage{color:var(--sage-deep);}
-  .stat .n.clay{color:var(--clay-deep);}
-  .stat .l{font-size:11.5px;color:var(--ink-soft);margin-top:6px;letter-spacing:.02em;}
-
-  .week-strip{display:flex;gap:6px;margin:18px 0 6px;}
-  .day-dot{flex:1;text-align:center;}
-  .day-dot .d{font-size:11px;color:var(--ink-faint);margin-bottom:6px;}
-  .day-dot .o{height:34px;border-radius:9px;background:var(--paper-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:14px;}
-  .day-dot .o.has{background:#F1F4EC;border-color:var(--sage);}
-
-  .note-card{
-    background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius-sm);
-    padding:13px 15px;margin-bottom:10px;
-  }
-  .note-card .meta{font-size:11.5px;color:var(--ink-faint);letter-spacing:.05em;margin-bottom:5px;display:flex;justify-content:space-between;}
-  .note-card .body{font-size:14.5px;line-height:1.6;}
-  .empty{text-align:center;color:var(--ink-faint);font-size:14px;padding:34px 0;line-height:1.7;}
-  .empty .big{font-size:30px;display:block;margin-bottom:8px;}
-
-  /* bottom nav */
-  nav{
-    position:fixed;left:0;right:0;bottom:0;
-    background:rgba(246,242,234,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-    border-top:1px solid var(--line);
-    padding:8px 0 calc(8px + env(safe-area-inset-bottom));
-    display:flex;justify-content:center;gap:8px;z-index:10;
-  }
-  nav button{
-    background:none;border:none;font-family:inherit;cursor:pointer;
-    display:flex;flex-direction:column;align-items:center;gap:3px;
-    padding:6px 26px;color:var(--ink-faint);transition:color .18s;
-  }
-  nav button.on{color:var(--ink);}
-  nav button svg{width:23px;height:23px;}
-  nav button span{font-size:11px;font-weight:600;letter-spacing:.03em;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--ink);line-height:1.75;-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
+  .app{max-width:480px;margin:0 auto;padding:0 18px 120px;}
+  .kotei{display:inline-block;line-height:0;}
+  .kotei svg{display:block;}
+  header{padding:24px 0 4px;text-align:center;}
+  header .kotei{width:64px;height:64px;margin-bottom:6px;}
+  header h1{font-size:20px;font-weight:700;margin:0;letter-spacing:.04em;}
+  header .tagline{font-size:12.5px;color:var(--ink-soft);margin:2px 0 0;}
+  .speech{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:16px 0 6px;font-size:15px;line-height:1.7;}
+  .speech.warm{background:var(--rose-soft);border-color:transparent;}
+  .speech .row{display:flex;gap:12px;align-items:flex-start;}
+  .speech .kotei{width:40px;height:40px;flex:0 0 auto;}
+  .speech .msg{flex:1;}
+  .speech .name{font-size:11.5px;color:var(--rose-deep);font-weight:700;margin-bottom:3px;letter-spacing:.05em;}
+  .view{display:none;}
+  .view.active{display:block;animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .deck{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 20px 20px;margin-top:8px;min-height:340px;display:flex;flex-direction:column;}
+  .progress{display:flex;gap:5px;margin-bottom:20px;}
+  .progress i{flex:1;height:4px;border-radius:2px;background:var(--line);transition:background .25s;}
+  .progress i.done{background:var(--rose);}
+  .progress i.cur{background:var(--rose-deep);}
+  .slide{flex:1;display:flex;flex-direction:column;animation:fade .3s ease;}
+  .slide .step{font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin-bottom:8px;}
+  .slide .q{font-size:19px;font-weight:700;line-height:1.5;margin:0 0 4px;}
+  .slide .sub{font-size:13px;color:var(--ink-soft);margin:0 0 18px;line-height:1.6;}
+  .yn{display:flex;gap:10px;margin-bottom:16px;}
+  .yn button{flex:1;padding:16px 0;border-radius:var(--radius-sm);border:1.5px solid var(--line);background:var(--bg);font-family:inherit;font-size:15px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all .16s;}
+  .yn button.on{border-color:var(--leaf);background:var(--leaf-soft);color:var(--leaf-deep);transform:translateY(-1px);}
+  .yn button.on.no{border-color:var(--ink-faint);background:#F2EDE9;color:var(--ink-soft);}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .tags button{padding:9px 15px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);font-family:inherit;font-size:14px;color:var(--ink-soft);cursor:pointer;transition:all .16s;}
+  .tags button.on{border-color:var(--rose);background:var(--rose-soft);color:var(--rose-deep);font-weight:600;}
+  textarea,input[type=text]{width:100%;font-family:inherit;font-size:15px;line-height:1.7;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:13px 15px;outline:none;transition:border-color .16s;}
+  textarea{resize:vertical;min-height:82px;}
+  textarea:focus,input[type=text]:focus{border-color:var(--rose);}
+  textarea::placeholder,input::placeholder{color:var(--ink-faint);}
+  .field-label{font-size:12.5px;color:var(--ink-soft);margin:2px 0 7px;font-weight:600;}
+  .deck-nav{display:flex;gap:10px;margin-top:18px;}
+  .btn{flex:1;padding:14px;border-radius:var(--radius-sm);border:none;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:transform .08s,opacity .16s;letter-spacing:.03em;}
+  .btn:active{transform:scale(.99);}
+  .btn.primary{background:var(--rose-deep);color:#fff;}
+  .btn.ghost{background:transparent;color:var(--ink-soft);border:1.5px solid var(--line);flex:0 0 auto;padding:14px 20px;}
+  .pillar{margin-bottom:14px;}
+  .pillar .top{display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px;}
+  .pillar .top b{font-weight:600;}
+  .pillar .val{color:var(--leaf-deep);font-weight:700;}
+  .pillar input[type=range]{width:100%;}
+  .ten{display:flex;flex-direction:column;gap:8px;}
+  .result{text-align:center;padding:8px 4px;}
+  .result .kotei{width:72px;height:72px;margin:6px auto 14px;}
+  .result h3{font-size:18px;font-weight:700;margin:0 0 10px;}
+  .result p{font-size:15px;color:var(--ink);line-height:1.8;margin:0 auto 6px;max-width:300px;}
+  .result .hint{font-size:12.5px;color:var(--ink-faint);margin-top:14px;}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:8px 0;}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 8px;text-align:center;}
+  .stat .n{font-size:25px;font-weight:700;line-height:1;}
+  .stat .n.rose{color:var(--rose-deep);}
+  .stat .n.leaf{color:var(--leaf-deep);}
+  .stat .l{font-size:11px;color:var(--ink-soft);margin-top:5px;}
+  .strip{display:flex;gap:5px;margin:14px 0;}
+  .strip .d{flex:1;text-align:center;}
+  .strip .d .w{font-size:10.5px;color:var(--ink-faint);margin-bottom:5px;}
+  .strip .d .o{height:30px;border-radius:9px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .strip .d .o.has{background:var(--leaf-soft);border-color:var(--leaf);}
+  .section-label{font-size:12.5px;color:var(--ink-soft);font-weight:700;letter-spacing:.04em;margin:22px 0 10px;}
+  .note-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:9px;}
+  .note-card .meta{font-size:11px;color:var(--ink-faint);margin-bottom:4px;display:flex;justify-content:space-between;}
+  .note-card .body{font-size:14px;line-height:1.6;}
+  .empty{text-align:center;color:var(--ink-faint);font-size:14px;padding:30px 0;}
+  .empty .kotei{width:56px;height:56px;margin:0 auto 10px;opacity:.7;}
+  nav{position:fixed;left:0;right:0;bottom:0;background:rgba(251,244,239,0.93);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:8px 0 calc(8px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:6px;z-index:10;}
+  nav button{background:none;border:none;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 22px;color:var(--ink-faint);transition:color .16s;}
+  nav button.on{color:var(--rose-deep);}
+  nav button svg{width:22px;height:22px;}
+  nav button span{font-size:10.5px;font-weight:700;}
+  .rec-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px 15px;margin-bottom:11px;}
+  .rec-date{font-size:12px;color:var(--rose-deep);font-weight:700;letter-spacing:.04em;margin-bottom:8px;}
+  .rec-item{font-size:13.5px;line-height:1.65;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+  .rec-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+  .rec-item b{font-weight:700;color:var(--leaf-deep);font-size:12px;}
+  .rec-note{color:var(--ink-soft);font-size:13px;display:inline-block;margin-top:2px;}
+  .rec-tag{font-size:11px;background:var(--rose-soft);color:var(--rose-deep);padding:2px 8px;border-radius:999px;}
+  .rec-tag.ok{background:var(--leaf-soft);color:var(--leaf-deep);}
 </style>
 </head>
 <body>
 <div class="app">
+  <template id="kotei-face">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="コウテイちゃん">
+      <circle cx="50" cy="52" r="40" fill="#FBEAE4"/>
+      <circle cx="50" cy="52" r="40" fill="none" stroke="#E0907F" stroke-width="2.5"/>
+      <circle cx="24" cy="58" r="7" fill="#F4C9BC"/>
+      <circle cx="76" cy="58" r="7" fill="#F4C9BC"/>
+      <circle cx="38" cy="50" r="4.2" fill="#3A322E"/>
+      <circle cx="62" cy="50" r="4.2" fill="#3A322E"/>
+      <circle cx="39.4" cy="48.6" r="1.3" fill="#fff"/>
+      <circle cx="63.4" cy="48.6" r="1.3" fill="#fff"/>
+      <path d="M42 62 Q50 69 58 62" fill="none" stroke="#C26B58" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M30 30 Q50 18 70 30" fill="none" stroke="#8FA079" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="50" cy="22" r="4" fill="#D8A85E"/>
+    </svg>
+  </template>
   <header>
-    <div class="brand">
-      <div class="mark"><span></span><span></span><span></span></div>
-      <h1>つみき</h1>
-    </div>
-    <p class="tagline">きょうの自分を、すこしだけ認める</p>
+    <span class="kotei" data-kotei></span>
+    <h1>コウテイちゃん</h1>
+    <p class="tagline">今日のあなたを、ぎゅっと抱きしめる</p>
   </header>
-
-  <!-- ============ DAILY ============ -->
-  <section id="view-daily" class="view active">
-    <div class="greet">
-      <div class="date" id="today-date"></div>
-      <h2 id="greet-text">きょうはどんな一日でしたか？</h2>
-    </div>
-
-    <div class="section-label">きょうできたこと</div>
-    <div class="actions" id="actions"></div>
-
-    <div class="section-label">よかったこと・うれしかったこと</div>
-    <textarea id="note" placeholder="ちいさなことで大丈夫。&#10;朝ちゃんと起きられた／コーヒーがおいしかった／後輩にお礼を言えた"></textarea>
-
-    <div class="section-label">いまの気分</div>
-    <div class="mood" id="mood"></div>
-
-    <button class="primary" id="save-btn">きょうの記録を保存する</button>
-    <div class="toast" id="toast"></div>
-  </section>
-
-  <!-- ============ WEEKLY ============ -->
-  <section id="view-weekly" class="view">
-    <div class="greet">
-      <div class="date">この7日間のふりかえり</div>
-      <h2>つみかさねを、ながめる</h2>
-    </div>
-
-    <div class="stats">
-      <div class="stat"><div class="n sage" id="s-days">0</div><div class="l">記録した日</div></div>
-      <div class="stat"><div class="n" id="s-actions">0</div><div class="l">できたこと</div></div>
-      <div class="stat"><div class="n clay" id="s-mood">–</div><div class="l">きぶんの平均</div></div>
-    </div>
-
-    <div class="week-strip" id="week-strip"></div>
-
-    <div class="section-label">この週に書いたこと</div>
-    <div id="week-notes"></div>
-
-    <button class="primary ghost" id="reflect-btn">この週をことばにしてみる</button>
-    <div class="toast" id="reflect-out"></div>
-  </section>
+  <section id="view-daily" class="view active"></section>
+  <section id="view-weekly" class="view"></section>
+  <section id="view-record" class="view"></section>
 </div>
-
-<!-- ============ NAV ============ -->
 <nav>
-  <button id="nav-daily" class="on" data-v="daily">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+  <button class="on" data-v="daily">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9Z"/></svg>
     <span>きょう</span>
   </button>
-  <button id="nav-weekly" data-v="weekly">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+  <button data-v="weekly">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
     <span>ふりかえり</span>
   </button>
+  <button data-v="record">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h13l3 3v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M7 8h8M7 12h8M7 16h5"/></svg>
+    <span>きろく</span>
+  </button>
 </nav>
-
 <script>
-/* =====================================================================
-   STORE — データ層をここに隔離。
-   将来 Supabase 等へ移行する際は、この store オブジェクトの
-   中身だけを差し替えれば UI 側は変更不要。
-   ===================================================================== */
 const store = {
-  KEY: 'tsumiki.entries.v1',
-  _read(){
-    try { return JSON.parse(localStorage.getItem(this.KEY)) || {}; }
-    catch(e){ return {}; }
+  DKEY:'kotei.daily.v1', WKEY:'kotei.weekly.v1',
+  _r(k){ try{return JSON.parse(localStorage.getItem(k))||{};}catch(e){return {};} },
+  _w(k,o){ try{localStorage.setItem(k,JSON.stringify(o));return true;}catch(e){return false;} },
+  getDaily(d){ return this._r(this.DKEY)[d]||null; },
+  saveDaily(d,e){ const a=this._r(this.DKEY); a[d]={...e,savedAt:new Date().toISOString()}; return this._w(this.DKEY,a); },
+  recentDaily(n){ const o=[]; for(let i=n-1;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const k=key(dt);o.push({key:k,date:dt,entry:this._r(this.DKEY)[k]||null});} return o; },
+  getWeekly(w){ return this._r(this.WKEY)[w]||null; },
+  saveWeekly(w,e){ const a=this._r(this.WKEY); a[w]={...e,savedAt:new Date().toISOString()}; return this._w(this.WKEY,a); }
+};
+const kotei = {
+  daily(e){
+    const filled = countYes(e);
+    const head = ['おかえり。今日もよく来てくれたね。','おつかれさま。ちゃんと帰ってきたね。','今日のあなたに会えてうれしいよ。'][new Date().getDay()%3];
+    let body;
+    if(filled>=5) body='今日はたくさん、自分を認められたね。すごいことだよ。よくがんばった、えらい。';
+    else if(filled>=3) body='いくつも書けたね。その一つひとつが、ちゃんとあなたを支えてるよ。';
+    else if(filled>=1) body='ひとつでも残せたなら、それで十分。今日のあなたは、ちゃんと前を向いてた。';
+    else body='今日は何も書けなくても大丈夫。ここに来られた、それだけで満点だよ。';
+    let extra='';
+    if(e.q3_pick===0 && (e.q3_note||'').trim()) extra=' つらい気持ちも、ちゃんと感じられたんだね。それも大事にしていいんだよ。';
+    else if(e.q5_done) extra=' 誰かのためになれた日は、自分のことも好きになれるね。';
+    return {head, body:body+extra};
   },
-  _write(obj){
-    try { localStorage.setItem(this.KEY, JSON.stringify(obj)); return true; }
-    catch(e){ return false; }
-  },
-  // 'YYYY-MM-DD' をキーに 1日1レコード
-  getDay(dateKey){ return this._read()[dateKey] || null; },
-  saveDay(dateKey, entry){
-    const all = this._read();
-    all[dateKey] = { ...entry, savedAt: new Date().toISOString() };
-    return this._write(all);
-  },
-  // 直近 n 日ぶんを古い順で返す
-  recent(n){
-    const out = [];
-    for(let i=n-1;i>=0;i--){
-      const d = new Date(); d.setDate(d.getDate()-i);
-      const key = fmtKey(d);
-      out.push({ dateKey:key, date:d, entry:this._read()[key]||null });
-    }
-    return out;
+  weekly(w, days){
+    const rec = days.filter(d=>d.entry).length;
+    const pillars = w.pillars||{};
+    const standing = Object.values(pillars).filter(v=>v>=3).length;
+    const goods = (w.goods||[]).filter(g=>g&&g.trim()).length;
+    let body='';
+    body += rec>0 ? ('今週は'+rec+'日、自分と向き合えたね。') : '今週はゆっくりだったね。それでいいんだよ。';
+    if(standing>0) body += ' 人生の柱が'+standing+'本、ちゃんと立ってる。あなたの世界は広がってるよ。';
+    if(goods>0) body += ' よかったことを'+goods+'個も見つけられたね。その目を、大事にしてね。';
+    body += ' どんな一週間でも、ここまで来たあなたを、わたしは誇りに思うよ。';
+    return {head:'一週間、おつかれさま。', body};
   }
 };
-
-/* ===== helpers ===== */
-function fmtKey(d){
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
-const WD = ['日','月','火','水','木','金','土'];
-function fmtDate(d){ return (d.getMonth()+1)+'月'+d.getDate()+'日 ('+WD[d.getDay()]+')'; }
-
-/* ===== content ===== */
-const ACTIONS = [
-  {id:'three',  label:'できたことを3つ思い出した', hint:'3 Good Things'},
-  {id:'kind',   label:'自分にやさしい言葉をかけた', hint:'セルフコンパッション'},
-  {id:'thanks', label:'だれかに「ありがとう」を伝えた', hint:''},
-  {id:'goal',   label:'小さな目標をひとつ達成した', hint:''},
-  {id:'rest',   label:'体を動かした／しっかり休んだ', hint:''},
+function key(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+const WD=['日','月','火','水','木','金','土'];
+function fmtDate(d){return (d.getMonth()+1)+'月'+d.getDate()+'日('+WD[d.getDay()]+')';}
+function weekKey(d){const t=new Date(d);const day=(t.getDay()+6)%7;t.setDate(t.getDate()-day);return 'W'+key(t);}
+function faceClone(){return document.getElementById('kotei-face').content.cloneNode(true);}
+function mountFaces(){document.querySelectorAll('[data-kotei]').forEach(s=>{if(!s.hasChildNodes())s.appendChild(faceClone());});}
+function countYes(e){let n=0;if(e.q1_done)n++;if((e.q2_tags||[]).length)n++;if(e.q3_pick===0)n++;if((e.q4_note||'').trim())n++;if(e.q5_done)n++;if(e.q6_done)n++;return n;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+const Q2_TAGS=['優しかった','頑張った','誠実だった','挑戦した','正直だった','思いやれた','あきらめなかった'];
+const Q3_OPTS=['感情を受け止められた','まだ難しかった','ネガティブはなかった'];
+const todayKey=key(new Date());
+let dstate={}; let didx=0;
+const DAILY_SLIDES=[
+  {key:'q1', step:'1 / 6 ・ 自分との約束', q:'今日、自分との小さな約束を守れた？', sub:'「自分は約束を守る人間だ」その感覚が、自信を育てるよ。',
+   render:s=>'<div class="field-label">今日の約束（自由に決めてね）</div><input type="text" id="q1_promise" placeholder="例：朝7時に起きる / 本を20ページ / 10分散歩する" value="'+esc(s.q1_promise||'')+'"><div style="height:14px"></div><div class="yn"><button data-yn="q1_done" data-v="1" class="'+(s.q1_done===true?'on':'')+'">守れた ◎</button><button data-yn="q1_done" data-v="0" class="no '+(s.q1_done===false?'on no':'')+'">今日はできなかった</button></div>'},
+  {key:'q2', step:'2 / 6 ・ 人格を磨けた行動', q:'今日、あなたの人格を磨けた行動は？', sub:'成果じゃなくていい。どんなふうに在れたか、を選んでね。',
+   render:s=>'<div class="tags" id="q2_tags">'+Q2_TAGS.map(t=>'<button data-tag="'+t+'" class="'+((s.q2_tags||[]).includes(t)?'on':'')+'">'+t+'</button>').join('')+'</div><div class="field-label">どんな場面だった？（任意）</div><textarea id="q2_note" placeholder="例：忙しい後輩に「手伝おうか」と声をかけられた">'+esc(s.q2_note||'')+'</textarea>'},
+  {key:'q3', step:'3 / 6 ・ 感情を否定しない', q:'ネガティブな感情を、否定しなかった？', sub:'感情と人格は別もの。感じること自体は、悪いことじゃないよ。',
+   render:s=>'<div class="tags" id="q3_tags">'+Q3_OPTS.map((t,i)=>'<button data-q3="'+i+'" class="'+(s.q3_pick===i?'on':'')+'">'+t+'</button>').join('')+'</div><div class="field-label">どんな気持ちだった？（任意）</div><textarea id="q3_note" placeholder="モヤモヤ、不安、くやしさ…言葉にするだけでいい">'+esc(s.q3_note||'')+'</textarea>'},
+  {key:'q4', step:'4 / 6 ・ 小さな成功体験', q:'今日できたこと、ひとつでも書いてみよう', sub:'「やればできる」を毎日積むと、自分を信じられるようになるよ。',
+   render:s=>'<textarea id="q4_note" placeholder="例：料理した / 部屋を掃除した / 英語を勉強した / プレゼンした">'+esc(s.q4_note||'')+'</textarea>'},
+  {key:'q5', step:'5 / 6 ・ 人への貢献', q:'今日、自分から誰かに価値を渡せた？', sub:'「必要とされた」より、自分から動けたこと。それが効くよ。',
+   render:s=>'<div class="yn"><button data-yn="q5_done" data-v="1" class="'+(s.q5_done===true?'on':'')+'">渡せた</button><button data-yn="q5_done" data-v="0" class="no '+(s.q5_done===false?'on no':'')+'">今日はなかった</button></div><div class="field-label">どんなこと？（任意）</div><input type="text" id="q5_note" placeholder="例：後輩を褒めた / 相談に乗った / 家族に電話した" value="'+esc(s.q5_note||'')+'">'},
+  {key:'q6', step:'6 / 6 ・ ひとりの時間', q:'ひとりで楽しめた時間は、あった？', sub:'「ひとり＝寂しい」じゃなく「ひとりも楽しい」を増やそう。',
+   render:s=>'<div class="yn"><button data-yn="q6_done" data-v="1" class="'+(s.q6_done===true?'on':'')+'">あった</button><button data-yn="q6_done" data-v="0" class="no '+(s.q6_done===false?'on no':'')+'">なかった</button></div><div class="field-label">何をした？（任意）</div><input type="text" id="q6_note" placeholder="例：カフェ / 映画 / 美術館 / サウナ / 散歩" value="'+esc(s.q6_note||'')+'">'}
 ];
-const MOODS = ['😟','😕','😐','🙂','😄'];
-const GREETS = ['きょうはどんな一日でしたか？','おつかれさまでした','よく来てくれましたね','すこし、立ち止まってみましょう'];
-
-/* ===== state (today) ===== */
-const todayKey = fmtKey(new Date());
-let sel = new Set();
-let mood = 0;
-
-/* ===== render daily ===== */
-const checkSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#FDFBF6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>';
-
-function buildDaily(){
-  document.getElementById('today-date').textContent = fmtDate(new Date());
-  document.getElementById('greet-text').textContent = GREETS[new Date().getDay()%GREETS.length];
-
-  const wrap = document.getElementById('actions'); wrap.innerHTML='';
-  ACTIONS.forEach(a=>{
-    const el = document.createElement('div');
-    el.className='chip'; el.dataset.id=a.id;
-    el.innerHTML = '<div class="box">'+checkSVG+'</div><div class="txt">'+a.label+(a.hint?'<small>'+a.hint+'</small>':'')+'</div>';
-    el.onclick = ()=>{
-      if(sel.has(a.id)){ sel.delete(a.id); el.classList.remove('on'); }
-      else { sel.add(a.id); el.classList.add('on'); }
-    };
-    wrap.appendChild(el);
-  });
-
-  const m = document.getElementById('mood'); m.innerHTML='';
-  MOODS.forEach((e,i)=>{
-    const b=document.createElement('button'); b.textContent=e;
-    b.onclick=()=>{ mood=i+1; [...m.children].forEach((c,j)=>c.classList.toggle('on',j===i)); };
-    m.appendChild(b);
-  });
-
-  // 既存記録があれば読み込み
-  const existing = store.getDay(todayKey);
-  if(existing){
-    (existing.actions||[]).forEach(id=>{
-      sel.add(id);
-      const c=wrap.querySelector('[data-id="'+id+'"]'); if(c)c.classList.add('on');
-    });
-    if(existing.note) document.getElementById('note').value = existing.note;
-    if(existing.mood){ mood=existing.mood; m.children[existing.mood-1]?.classList.add('on'); }
-  }
-}
-
-document.getElementById('save-btn').onclick = ()=>{
-  const note = document.getElementById('note').value.trim();
-  const toast = document.getElementById('toast');
-  if(sel.size===0 && !note && !mood){
-    toast.className='toast err'; toast.textContent='アクションかメモ、気分のどれかを記録してみましょう';
+function renderDaily(){
+  const v=document.getElementById('view-daily');
+  const existing=store.getDaily(todayKey);
+  if(existing && Object.keys(dstate).length===0){
+    const fb=kotei.daily(existing);
+    v.innerHTML='<div class="speech warm"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'+fb.head+'</div></div></div><div class="deck"><div class="result"><span class="kotei" data-kotei></span><h3>今日の記録、ぜんぶ受けとったよ</h3><p>'+fb.body+'</p><p class="hint">また明日も、待ってるね。</p></div><div class="deck-nav"><button class="btn ghost" id="edit-today">書き直す</button><button class="btn primary" id="go-weekly">ふりかえりを見る</button></div></div>';
+    mountFaces();
+    document.getElementById('edit-today').onclick=()=>{dstate={...existing};didx=0;renderDeck();};
+    document.getElementById('go-weekly').onclick=()=>switchView('weekly');
     return;
   }
-  const ok = store.saveDay(todayKey, { actions:[...sel], note, mood });
-  if(ok){ toast.className='toast'; toast.textContent='きょうの記録を保存しました ✓'; }
-  else { toast.className='toast err'; toast.textContent='保存できませんでした。空き容量をご確認ください'; }
-};
+  renderDeck();
+}
+function renderDeck(){
+  const v=document.getElementById('view-daily');
+  const total=DAILY_SLIDES.length;
+  const s=DAILY_SLIDES[didx];
+  const bars=DAILY_SLIDES.map((_,i)=>'<i class="'+(i<didx?'done':i===didx?'cur':'')+'"></i>').join('');
+  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>むりせず、答えられるところだけでいいからね。</div></div></div><div class="deck"><div class="progress">'+bars+'</div><div class="slide"><div class="step">'+s.step+'</div><p class="q">'+s.q+'</p><p class="sub">'+s.sub+'</p>'+s.render(dstate)+'</div><div class="deck-nav">'+(didx>0?'<button class="btn ghost" id="prev">もどる</button>':'')+'<button class="btn primary" id="next">'+(didx===total-1?'コウテイちゃんに渡す':'つぎへ')+'</button></div></div>';
+  mountFaces();
+  wireSlide(s);
+  const prev=document.getElementById('prev'); if(prev)prev.onclick=()=>{captureSlide(s);didx--;renderDeck();};
+  document.getElementById('next').onclick=()=>{captureSlide(s);if(didx<total-1){didx++;renderDeck();}else{finishDaily();}};
+}
+function wireSlide(s){
+  document.querySelectorAll('[data-yn]').forEach(b=>{b.onclick=()=>{const k=b.dataset.yn;document.querySelectorAll('[data-yn="'+k+'"]').forEach(x=>x.classList.remove('on'));b.classList.add('on');};});
+  document.querySelectorAll('#q2_tags button').forEach(b=>{b.onclick=()=>b.classList.toggle('on');});
+  document.querySelectorAll('#q3_tags button').forEach(b=>{b.onclick=()=>{document.querySelectorAll('#q3_tags button').forEach(x=>x.classList.remove('on'));b.classList.add('on');};});
+}
+function captureSlide(s){
+  const g=id=>document.getElementById(id);
+  if(s.key==='q1'){ if(g('q1_promise'))dstate.q1_promise=g('q1_promise').value; const on=document.querySelector('[data-yn="q1_done"].on'); if(on)dstate.q1_done=on.dataset.v==='1'; }
+  if(s.key==='q2'){ dstate.q2_tags=[...document.querySelectorAll('#q2_tags button.on')].map(b=>b.dataset.tag); if(g('q2_note'))dstate.q2_note=g('q2_note').value; }
+  if(s.key==='q3'){ const on=document.querySelector('#q3_tags button.on'); if(on)dstate.q3_pick=+on.dataset.q3; if(g('q3_note'))dstate.q3_note=g('q3_note').value; }
+  if(s.key==='q4'){ if(g('q4_note'))dstate.q4_note=g('q4_note').value; }
+  if(s.key==='q5'){ const on=document.querySelector('[data-yn="q5_done"].on'); if(on)dstate.q5_done=on.dataset.v==='1'; if(g('q5_note'))dstate.q5_note=g('q5_note').value; }
+  if(s.key==='q6'){ const on=document.querySelector('[data-yn="q6_done"].on'); if(on)dstate.q6_done=on.dataset.v==='1'; if(g('q6_note'))dstate.q6_note=g('q6_note').value; }
+}
+function finishDaily(){
+  const clean={...dstate};
+  store.saveDaily(todayKey, clean);
+  dstate={}; didx=0;
+  renderDaily();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+const PILLARS=['恋愛','仕事','友達','趣味','運動','旅行','勉強','家族'];
+const thisWeek=weekKey(new Date());
+let wstate={};
+function renderWeekly(){
+  const v=document.getElementById('view-weekly');
+  const days=store.recentDaily(7);
+  const filled=days.filter(d=>d.entry);
+  const saved=store.getWeekly(thisWeek);
+  const totalActions=filled.reduce((a,d)=>a+countYes(d.entry),0);
+  const stripHtml=days.map(d=>{const has=!!d.entry;return '<div class="d"><div class="w">'+WD[d.date.getDay()]+'</div><div class="o'+(has?' has':'')+'">'+(has?'🌷':'')+'</div></div>';}).join('');
+  const notes=filled.filter(d=>d.entry.q4_note&&d.entry.q4_note.trim()).reverse();
+  const notesHtml=notes.length?notes.map(d=>'<div class="note-card"><div class="meta"><span>'+fmtDate(d.date)+'</span></div><div class="body">'+esc(d.entry.q4_note)+'</div></div>').join(''):'<div class="empty"><span class="kotei" data-kotei></span>まだ「できたこと」の記録がないよ。<br>きょうのタブから、ひとつ書いてみよう。</div>';
+  if(!saved && wstate._editing!==true && !wstate._justSaved){
+    const goodPH=['仕事で褒められた','旅行した','友達と笑った','本が面白かった','親と話した','運動できた','空が綺麗だった','ごはんが美味しかった','ぐっすり眠れた','自分を労われた'];
+    v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>週に一度、すこし大きな目で自分を見てみよう。毎日じゃなくていいからね。</div></div></div><div class="deck"><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin-bottom:8px;">週次チェック 1 / 2 ・ 人生の柱</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">今週、それぞれの柱はどのくらい充実してた？</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">柱が多いほど、ひとつ折れても倒れない。無理に全部埋めなくていいよ。</p><div id="pillars">'+PILLARS.map(p=>'<div class="pillar"><div class="top"><b>'+p+'</b><span class="val" id="v-'+p+'">3</span></div><input type="range" min="0" max="5" step="1" value="3" data-pillar="'+p+'"><input type="text" data-pmemo="'+p+'" placeholder="ひとことメモ（任意）" style="margin-top:7px;font-size:13px;"></div>').join('')+'</div><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin:18px 0 8px;">週次チェック 2 / 2 ・ 人生の面積</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">柱が1本なくても、今週よかったこと</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">いくつでもいい。書いた数だけ、あなたの人生の面積が広がるよ。</p><div class="ten" id="goods">'+Array.from({length:10}).map((_,i)=>'<input type="text" data-good="'+i+'" placeholder="'+(i+1)+'. '+goodPH[i]+'">').join('')+'</div><div class="deck-nav"><button class="btn primary" id="save-weekly">コウテイちゃんに渡す</button></div></div><div class="section-label">この7日間</div><div class="stats"><div class="stat"><div class="n leaf">'+filled.length+'</div><div class="l">記録した日</div></div><div class="stat"><div class="n">'+totalActions+'</div><div class="l">できたこと</div></div><div class="stat"><div class="n rose">'+notes.length+'</div><div class="l">書いた日</div></div></div><div class="strip">'+stripHtml+'</div>';
+    mountFaces();
+    document.querySelectorAll('[data-pillar]').forEach(r=>{r.oninput=()=>document.getElementById('v-'+r.dataset.pillar).textContent=r.value;});
+    document.getElementById('save-weekly').onclick=saveWeekly;
+    return;
+  }
+  const w=saved||{};
+  const fb=kotei.weekly(w, days);
+  const standing=Object.values(w.pillars||{}).filter(x=>x>=3).length;
+  const goods=(w.goods||[]).filter(g=>g&&g.trim()).length;
+  v.innerHTML='<div class="speech warm"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'+fb.head+'</div></div></div><div class="deck"><div class="result"><span class="kotei" data-kotei></span><h3>今週のあなたへ</h3><p>'+fb.body+'</p></div></div><div class="stats"><div class="stat"><div class="n leaf">'+filled.length+'</div><div class="l">記録した日</div></div><div class="stat"><div class="n">'+standing+'</div><div class="l">立ってる柱</div></div><div class="stat"><div class="n rose">'+goods+'</div><div class="l">よかったこと</div></div></div><div class="strip">'+stripHtml+'</div><div class="section-label">この週の「できたこと」</div>'+notesHtml+'<div class="deck-nav" style="margin-top:14px"><button class="btn ghost" id="redo-weekly" style="flex:1">週次チェックを書き直す</button></div>';
+  mountFaces();
+  document.getElementById('redo-weekly').onclick=()=>{wstate._editing=true;wstate._justSaved=false;renderWeekly();};
+}
+function saveWeekly(){
+  const pillars={};
+  document.querySelectorAll('[data-pillar]').forEach(r=>pillars[r.dataset.pillar]=+r.value);
+  const pmemos={};document.querySelectorAll('[data-pmemo]').forEach(i=>{if(i.value.trim())pmemos[i.dataset.pmemo]=i.value.trim();});
+  const goods=[...document.querySelectorAll('[data-good]')].map(i=>i.value.trim()).filter(Boolean);
+  store.saveWeekly(thisWeek,{pillars,pmemos,goods});
+  wstate={_justSaved:true,_editing:false};
+  renderWeekly();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+/* =====================================================================
+   RECORD — 過去の自由記述をすべて日付つきで一覧する「きろく」ページ。
+   日次のq2/q3/q4/q5/q6メモ + 週次の柱メモ・よかったこと を時系列でまとめる。
+   ===================================================================== */
+const Q3_LABELS=['感情を受け止められた','まだ難しかった','ネガティブはなかった'];
+function renderRecord(){
+  const v=document.getElementById('view-record');
+  const all=store._r(store.DKEY);
+  const dates=Object.keys(all).sort().reverse();
+  // collect weekly too
+  const weeks=store._r(store.WKEY);
+  let html='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>あなたが歩いてきた道だよ。ゆっくり、ながめてね。</div></div></div>';
 
-/* ===== render weekly ===== */
-function buildWeekly(){
-  const days = store.recent(7);
-  const filled = days.filter(d=>d.entry);
-  document.getElementById('s-days').textContent = filled.length;
-  document.getElementById('s-actions').textContent = filled.reduce((s,d)=>s+(d.entry.actions?.length||0),0);
-  const moods = filled.map(d=>d.entry.mood).filter(Boolean);
-  document.getElementById('s-mood').textContent = moods.length ? (moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1) : '–';
+  if(dates.length===0 && Object.keys(weeks).length===0){
+    html+='<div class="empty"><span class="kotei" data-kotei></span>まだ記録がないよ。<br>きょうのタブから、はじめてみよう。</div>';
+    v.innerHTML=html; mountFaces(); return;
+  }
 
-  const strip = document.getElementById('week-strip'); strip.innerHTML='';
-  days.forEach(d=>{
-    const has = !!d.entry;
-    const face = has && d.entry.mood ? MOODS[d.entry.mood-1] : (has?'·':'');
-    strip.innerHTML += '<div class="day-dot"><div class="d">'+WD[d.date.getDay()]+'</div><div class="o'+(has?' has':'')+'">'+face+'</div></div>';
+  html+='<div class="section-label">日々のきろく</div>';
+  dates.forEach(dk=>{
+    const e=all[dk];
+    const d=new Date(dk+'T00:00:00');
+    let items=[];
+    if((e.q2_tags||[]).length) items.push('<b>磨けた人格</b> '+e.q2_tags.join('・')+(e.q2_note?'<br><span class="rec-note">'+esc(e.q2_note)+'</span>':''));
+    if(e.q3_note&&e.q3_note.trim()) items.push('<b>気持ち</b> '+(e.q3_pick!=null?'<span class="rec-tag">'+Q3_LABELS[e.q3_pick]+'</span> ':'')+'<br><span class="rec-note">'+esc(e.q3_note)+'</span>');
+    if(e.q4_note&&e.q4_note.trim()) items.push('<b>できたこと</b><br><span class="rec-note">'+esc(e.q4_note)+'</span>');
+    if(e.q5_note&&e.q5_note.trim()) items.push('<b>人への貢献</b><br><span class="rec-note">'+esc(e.q5_note)+'</span>');
+    if(e.q6_note&&e.q6_note.trim()) items.push('<b>ひとり時間</b><br><span class="rec-note">'+esc(e.q6_note)+'</span>');
+    if(e.q1_promise&&e.q1_promise.trim()) items.push('<b>自分との約束</b> '+esc(e.q1_promise)+(e.q1_done?' <span class="rec-tag ok">守れた</span>':''));
+    if(items.length===0) return;
+    html+='<div class="rec-card"><div class="rec-date">'+fmtDate(d)+'</div>'+items.map(it=>'<div class="rec-item">'+it+'</div>').join('')+'</div>';
   });
 
-  const nw = document.getElementById('week-notes');
-  const noted = filled.filter(d=>d.entry.note).reverse();
-  if(noted.length===0){
-    nw.innerHTML = '<div class="empty"><span class="big">🌱</span>まだ記録がありません。<br>「きょう」のタブから、ひとつ書いてみましょう。</div>';
-  } else {
-    nw.innerHTML='';
-    noted.forEach(d=>{
-      nw.innerHTML += '<div class="note-card"><div class="meta"><span>'+fmtDate(d.date)+'</span><span>'+(d.entry.mood?MOODS[d.entry.mood-1]:'')+'</span></div><div class="body">'+escapeHtml(d.entry.note)+'</div></div>';
+  const wkeys=Object.keys(weeks).sort().reverse();
+  if(wkeys.length){
+    html+='<div class="section-label">週次のきろく</div>';
+    wkeys.forEach(wk=>{
+      const w=weeks[wk];
+      const label=wk.replace('W','')+' の週';
+      let parts=[];
+      const pmemos=w.pmemos||{};
+      const pmemoKeys=Object.keys(pmemos);
+      if(pmemoKeys.length) parts.push('<b>柱のメモ</b><br>'+pmemoKeys.map(k=>'<span class="rec-note">'+k+'：'+esc(pmemos[k])+'</span>').join('<br>'));
+      const goods=(w.goods||[]).filter(g=>g&&g.trim());
+      if(goods.length) parts.push('<b>よかったこと '+goods.length+'個</b><br><span class="rec-note">'+goods.map(esc).join('<br>')+'</span>');
+      if(parts.length===0) return;
+      html+='<div class="rec-card"><div class="rec-date">'+label+'</div>'+parts.map(p=>'<div class="rec-item">'+p+'</div>').join('')+'</div>';
     });
   }
+
+  v.innerHTML=html; mountFaces();
 }
-function escapeHtml(s){ return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
-document.getElementById('reflect-btn').onclick = ()=>{
-  const noted = store.recent(7).filter(d=>d.entry&&d.entry.note);
-  const out = document.getElementById('reflect-out');
-  if(noted.length===0){ out.className='toast err'; out.textContent='まずは何日か記録してみましょう'; return; }
-  // ローカル完結のやさしいまとめ（オフラインでも動く）
-  const lines = ['この7日間で、'+noted.length+'日ぶんの「よかったこと」を残せました。',
-                 'それは、立ち止まって自分を見つめた時間が'+noted.length+'回あったということ。',
-                 'つみきは、ひとつずつでいい。よく続けられています。'];
-  out.className='toast'; out.style.lineHeight='1.7'; out.style.fontWeight='500';
-  out.innerHTML = lines.join('<br>');
-};
-
-/* ===== nav ===== */
-function switchView(v){
+function switchView(view){
   document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
-  document.getElementById('view-'+v).classList.add('active');
-  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
-  if(v==='weekly') buildWeekly();
+  document.getElementById('view-'+view).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+  if(view==='daily'){dstate={};didx=0;renderDaily();}
+  if(view==='weekly'){wstate={};renderWeekly();}
+  if(view==='record'){renderRecord();}
   window.scrollTo(0,0);
 }
-document.querySelectorAll('nav button').forEach(b=> b.onclick=()=>switchView(b.dataset.v));
-
-/* ===== init ===== */
-buildDaily();
-
-/* ===== service worker (PWA) ===== */
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
+mountFaces();
+renderDaily();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
 </script>
 </body>
 </html>

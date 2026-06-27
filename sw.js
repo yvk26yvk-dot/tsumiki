@@ -1,4 +1,4 @@
-const CACHE = 'tsumiki-v1';
+const CACHE = 'kotei-v1';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
