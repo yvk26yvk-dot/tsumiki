@@ -1,0 +1,15 @@
+{
+  "name": "つみき — 自己肯定感をすこしずつ",
+  "short_name": "つみき",
+  "description": "きょうの自分をすこしだけ認める。日々のアクション記録と週次のふりかえり。",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F6F2EA",
+  "theme_color": "#F6F2EA",
+  "orientation": "portrait",
+  "lang": "ja",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F6F2EA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="つみき">
+<link rel="manifest" href="manifest.json">
+<title>つみき — 自己肯定感をすこしずつ</title>
+<style>
+  :root{
+    --paper:#F6F2EA;
+    --paper-2:#FDFBF6;
+    --ink:#2E2A24;
+    --ink-soft:#6E665A;
+    --ink-faint:#A39A8B;
+    --sage:#7C8A6B;
+    --sage-deep:#5A6B49;
+    --clay:#C08A63;
+    --clay-deep:#9A6843;
+    --line:rgba(46,42,36,0.10);
+    --line-2:rgba(46,42,36,0.18);
+    --radius:18px;
+    --radius-sm:12px;
+    --shadow:0 1px 0 rgba(46,42,36,0.04);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .app{max-width:520px;margin:0 auto;padding:0 20px 110px;}
+
+  /* header */
+  header{padding:28px 0 8px;text-align:center;}
+  .brand{display:inline-flex;align-items:center;gap:9px;}
+  .brand .mark{display:flex;flex-direction:column;gap:2px;}
+  .brand .mark span{display:block;width:18px;height:7px;border-radius:2px;}
+  .brand .mark span:nth-child(1){background:var(--clay);width:13px;}
+  .brand .mark span:nth-child(2){background:var(--sage);width:18px;}
+  .brand .mark span:nth-child(3){background:var(--ink-faint);width:11px;}
+  .brand h1{font-size:19px;font-weight:600;margin:0;letter-spacing:.04em;}
+  .tagline{font-size:13px;color:var(--ink-soft);margin:4px 0 0;letter-spacing:.02em;}
+
+  /* views */
+  .view{display:none;animation:fade .35s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  .greet{margin:18px 0 22px;}
+  .greet .date{font-size:13px;color:var(--ink-faint);letter-spacing:.06em;}
+  .greet h2{font-size:23px;font-weight:600;margin:3px 0 0;line-height:1.4;}
+
+  .section-label{font-size:13px;color:var(--ink-soft);font-weight:600;letter-spacing:.04em;margin:26px 0 12px;}
+
+  /* action chips */
+  .actions{display:flex;flex-direction:column;gap:10px;}
+  .chip{
+    display:flex;align-items:center;gap:13px;
+    background:var(--paper-2);border:1px solid var(--line);
+    border-radius:var(--radius-sm);padding:14px 16px;cursor:pointer;
+    transition:border-color .18s,background .18s,transform .08s;
+    box-shadow:var(--shadow);
+  }
+  .chip:active{transform:scale(.99);}
+  .chip.on{border-color:var(--sage);background:#F1F4EC;}
+  .chip .box{
+    width:24px;height:24px;border-radius:8px;border:1.8px solid var(--line-2);
+    flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    transition:all .18s;
+  }
+  .chip.on .box{background:var(--sage);border-color:var(--sage);}
+  .chip .box svg{width:14px;height:14px;opacity:0;transition:opacity .18s;}
+  .chip.on .box svg{opacity:1;}
+  .chip .txt{font-size:15px;line-height:1.45;}
+  .chip .txt small{display:block;font-size:12px;color:var(--ink-faint);margin-top:1px;}
+
+  /* note */
+  textarea{
+    width:100%;font-family:inherit;font-size:15px;line-height:1.7;color:var(--ink);
+    background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:14px 16px;resize:vertical;min-height:96px;outline:none;
+    transition:border-color .18s;
+  }
+  textarea:focus{border-color:var(--sage);}
+  textarea::placeholder{color:var(--ink-faint);}
+
+  /* mood */
+  .mood{display:flex;justify-content:space-between;gap:8px;margin-top:4px;}
+  .mood button{
+    flex:1;background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:12px 0;font-size:24px;cursor:pointer;transition:all .16s;line-height:1;
+  }
+  .mood button.on{border-color:var(--clay);background:#FAF0E8;transform:translateY(-2px);}
+
+  /* primary button */
+  .primary{
+    width:100%;background:var(--ink);color:var(--paper-2);border:none;
+    border-radius:var(--radius);padding:16px;font-size:16px;font-weight:600;
+    font-family:inherit;cursor:pointer;margin-top:26px;letter-spacing:.03em;
+    transition:transform .08s,opacity .18s;
+  }
+  .primary:active{transform:scale(.99);}
+  .primary.ghost{background:transparent;color:var(--ink);border:1px solid var(--line-2);}
+  .toast{
+    text-align:center;font-size:14px;color:var(--sage-deep);
+    margin:14px 0 0;min-height:20px;font-weight:600;
+  }
+  .toast.err{color:var(--clay-deep);}
+
+  /* weekly */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:6px 0 4px;}
+  .stat{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:15px 12px;text-align:center;}
+  .stat .n{font-size:27px;font-weight:600;line-height:1;letter-spacing:-.01em;}
+  .stat .n.sage{color:var(--sage-deep);}
+  .stat .n.clay{color:var(--clay-deep);}
+  .stat .l{font-size:11.5px;color:var(--ink-soft);margin-top:6px;letter-spacing:.02em;}
+
+  .week-strip{display:flex;gap:6px;margin:18px 0 6px;}
+  .day-dot{flex:1;text-align:center;}
+  .day-dot .d{font-size:11px;color:var(--ink-faint);margin-bottom:6px;}
+  .day-dot .o{height:34px;border-radius:9px;background:var(--paper-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .day-dot .o.has{background:#F1F4EC;border-color:var(--sage);}
+
+  .note-card{
+    background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:13px 15px;margin-bottom:10px;
+  }
+  .note-card .meta{font-size:11.5px;color:var(--ink-faint);letter-spacing:.05em;margin-bottom:5px;display:flex;justify-content:space-between;}
+  .note-card .body{font-size:14.5px;line-height:1.6;}
+  .empty{text-align:center;color:var(--ink-faint);font-size:14px;padding:34px 0;line-height:1.7;}
+  .empty .big{font-size:30px;display:block;margin-bottom:8px;}
+
+  /* bottom nav */
+  nav{
+    position:fixed;left:0;right:0;bottom:0;
+    background:rgba(246,242,234,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);
+    padding:8px 0 calc(8px + env(safe-area-inset-bottom));
+    display:flex;justify-content:center;gap:8px;z-index:10;
+  }
+  nav button{
+    background:none;border:none;font-family:inherit;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:6px 26px;color:var(--ink-faint);transition:color .18s;
+  }
+  nav button.on{color:var(--ink);}
+  nav button svg{width:23px;height:23px;}
+  nav button span{font-size:11px;font-weight:600;letter-spacing:.03em;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="mark"><span></span><span></span><span></span></div>
+      <h1>つみき</h1>
+    </div>
+    <p class="tagline">きょうの自分を、すこしだけ認める</p>
+  </header>
+
+  <!-- ============ DAILY ============ -->
+  <section id="view-daily" class="view active">
+    <div class="greet">
+      <div class="date" id="today-date"></div>
+      <h2 id="greet-text">きょうはどんな一日でしたか？</h2>
+    </div>
+
+    <div class="section-label">きょうできたこと</div>
+    <div class="actions" id="actions"></div>
+
+    <div class="section-label">よかったこと・うれしかったこと</div>
+    <textarea id="note" placeholder="ちいさなことで大丈夫。&#10;朝ちゃんと起きられた／コーヒーがおいしかった／後輩にお礼を言えた"></textarea>
+
+    <div class="section-label">いまの気分</div>
+    <div class="mood" id="mood"></div>
+
+    <button class="primary" id="save-btn">きょうの記録を保存する</button>
+    <div class="toast" id="toast"></div>
+  </section>
+
+  <!-- ============ WEEKLY ============ -->
+  <section id="view-weekly" class="view">
+    <div class="greet">
+      <div class="date">この7日間のふりかえり</div>
+      <h2>つみかさねを、ながめる</h2>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n sage" id="s-days">0</div><div class="l">記録した日</div></div>
+      <div class="stat"><div class="n" id="s-actions">0</div><div class="l">できたこと</div></div>
+      <div class="stat"><div class="n clay" id="s-mood">–</div><div class="l">きぶんの平均</div></div>
+    </div>
+
+    <div class="week-strip" id="week-strip"></div>
+
+    <div class="section-label">この週に書いたこと</div>
+    <div id="week-notes"></div>
+
+    <button class="primary ghost" id="reflect-btn">この週をことばにしてみる</button>
+    <div class="toast" id="reflect-out"></div>
+  </section>
+</div>
+
+<!-- ============ NAV ============ -->
+<nav>
+  <button id="nav-daily" class="on" data-v="daily">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+    <span>きょう</span>
+  </button>
+  <button id="nav-weekly" data-v="weekly">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+    <span>ふりかえり</span>
+  </button>
+</nav>
+
+<script>
+/* =====================================================================
+   STORE — データ層をここに隔離。
+   将来 Supabase 等へ移行する際は、この store オブジェクトの
+   中身だけを差し替えれば UI 側は変更不要。
+   ===================================================================== */
+const store = {
+  KEY: 'tsumiki.entries.v1',
+  _read(){
+    try { return JSON.parse(localStorage.getItem(this.KEY)) || {}; }
+    catch(e){ return {}; }
+  },
+  _write(obj){
+    try { localStorage.setItem(this.KEY, JSON.stringify(obj)); return true; }
+    catch(e){ return false; }
+  },
+  // 'YYYY-MM-DD' をキーに 1日1レコード
+  getDay(dateKey){ return this._read()[dateKey] || null; },
+  saveDay(dateKey, entry){
+    const all = this._read();
+    all[dateKey] = { ...entry, savedAt: new Date().toISOString() };
+    return this._write(all);
+  },
+  // 直近 n 日ぶんを古い順で返す
+  recent(n){
+    const out = [];
+    for(let i=n-1;i>=0;i--){
+      const d = new Date(); d.setDate(d.getDate()-i);
+      const key = fmtKey(d);
+      out.push({ dateKey:key, date:d, entry:this._read()[key]||null });
+    }
+    return out;
+  }
+};
+
+/* ===== helpers ===== */
+function fmtKey(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+const WD = ['日','月','火','水','木','金','土'];
+function fmtDate(d){ return (d.getMonth()+1)+'月'+d.getDate()+'日 ('+WD[d.getDay()]+')'; }
+
+/* ===== content ===== */
+const ACTIONS = [
+  {id:'three',  label:'できたことを3つ思い出した', hint:'3 Good Things'},
+  {id:'kind',   label:'自分にやさしい言葉をかけた', hint:'セルフコンパッション'},
+  {id:'thanks', label:'だれかに「ありがとう」を伝えた', hint:''},
+  {id:'goal',   label:'小さな目標をひとつ達成した', hint:''},
+  {id:'rest',   label:'体を動かした／しっかり休んだ', hint:''},
+];
+const MOODS = ['😟','😕','😐','🙂','😄'];
+const GREETS = ['きょうはどんな一日でしたか？','おつかれさまでした','よく来てくれましたね','すこし、立ち止まってみましょう'];
+
+/* ===== state (today) ===== */
+const todayKey = fmtKey(new Date());
+let sel = new Set();
+let mood = 0;
+
+/* ===== render daily ===== */
+const checkSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#FDFBF6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>';
+
+function buildDaily(){
+  document.getElementById('today-date').textContent = fmtDate(new Date());
+  document.getElementById('greet-text').textContent = GREETS[new Date().getDay()%GREETS.length];
+
+  const wrap = document.getElementById('actions'); wrap.innerHTML='';
+  ACTIONS.forEach(a=>{
+    const el = document.createElement('div');
+    el.className='chip'; el.dataset.id=a.id;
+    el.innerHTML = '<div class="box">'+checkSVG+'</div><div class="txt">'+a.label+(a.hint?'<small>'+a.hint+'</small>':'')+'</div>';
+    el.onclick = ()=>{
+      if(sel.has(a.id)){ sel.delete(a.id); el.classList.remove('on'); }
+      else { sel.add(a.id); el.classList.add('on'); }
+    };
+    wrap.appendChild(el);
+  });
+
+  const m = document.getElementById('mood'); m.innerHTML='';
+  MOODS.forEach((e,i)=>{
+    const b=document.createElement('button'); b.textContent=e;
+    b.onclick=()=>{ mood=i+1; [...m.children].forEach((c,j)=>c.classList.toggle('on',j===i)); };
+    m.appendChild(b);
+  });
+
+  // 既存記録があれば読み込み
+  const existing = store.getDay(todayKey);
+  if(existing){
+    (existing.actions||[]).forEach(id=>{
+      sel.add(id);
+      const c=wrap.querySelector('[data-id="'+id+'"]'); if(c)c.classList.add('on');
+    });
+    if(existing.note) document.getElementById('note').value = existing.note;
+    if(existing.mood){ mood=existing.mood; m.children[existing.mood-1]?.classList.add('on'); }
+  }
+}
+
+document.getElementById('save-btn').onclick = ()=>{
+  const note = document.getElementById('note').value.trim();
+  const toast = document.getElementById('toast');
+  if(sel.size===0 && !note && !mood){
+    toast.className='toast err'; toast.textContent='アクションかメモ、気分のどれかを記録してみましょう';
+    return;
+  }
+  const ok = store.saveDay(todayKey, { actions:[...sel], note, mood });
+  if(ok){ toast.className='toast'; toast.textContent='きょうの記録を保存しました ✓'; }
+  else { toast.className='toast err'; toast.textContent='保存できませんでした。空き容量をご確認ください'; }
+};
+
+/* ===== render weekly ===== */
+function buildWeekly(){
+  const days = store.recent(7);
+  const filled = days.filter(d=>d.entry);
+  document.getElementById('s-days').textContent = filled.length;
+  document.getElementById('s-actions').textContent = filled.reduce((s,d)=>s+(d.entry.actions?.length||0),0);
+  const moods = filled.map(d=>d.entry.mood).filter(Boolean);
+  document.getElementById('s-mood').textContent = moods.length ? (moods.reduce((a,b)=>a+b,0)/moods.length).toFixed(1) : '–';
+
+  const strip = document.getElementById('week-strip'); strip.innerHTML='';
+  days.forEach(d=>{
+    const has = !!d.entry;
+    const face = has && d.entry.mood ? MOODS[d.entry.mood-1] : (has?'·':'');
+    strip.innerHTML += '<div class="day-dot"><div class="d">'+WD[d.date.getDay()]+'</div><div class="o'+(has?' has':'')+'">'+face+'</div></div>';
+  });
+
+  const nw = document.getElementById('week-notes');
+  const noted = filled.filter(d=>d.entry.note).reverse();
+  if(noted.length===0){
+    nw.innerHTML = '<div class="empty"><span class="big">🌱</span>まだ記録がありません。<br>「きょう」のタブから、ひとつ書いてみましょう。</div>';
+  } else {
+    nw.innerHTML='';
+    noted.forEach(d=>{
+      nw.innerHTML += '<div class="note-card"><div class="meta"><span>'+fmtDate(d.date)+'</span><span>'+(d.entry.mood?MOODS[d.entry.mood-1]:'')+'</span></div><div class="body">'+escapeHtml(d.entry.note)+'</div></div>';
+    });
+  }
+}
+function escapeHtml(s){ return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+document.getElementById('reflect-btn').onclick = ()=>{
+  const noted = store.recent(7).filter(d=>d.entry&&d.entry.note);
+  const out = document.getElementById('reflect-out');
+  if(noted.length===0){ out.className='toast err'; out.textContent='まずは何日か記録してみましょう'; return; }
+  // ローカル完結のやさしいまとめ（オフラインでも動く）
+  const lines = ['この7日間で、'+noted.length+'日ぶんの「よかったこと」を残せました。',
+                 'それは、立ち止まって自分を見つめた時間が'+noted.length+'回あったということ。',
+                 'つみきは、ひとつずつでいい。よく続けられています。'];
+  out.className='toast'; out.style.lineHeight='1.7'; out.style.fontWeight='500';
+  out.innerHTML = lines.join('<br>');
+};
+
+/* ===== nav ===== */
+function switchView(v){
+  document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+  if(v==='weekly') buildWeekly();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('nav button').forEach(b=> b.onclick=()=>switchView(b.dataset.v));
+
+/* ===== init ===== */
+buildDaily();
+
+/* ===== service worker (PWA) ===== */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
