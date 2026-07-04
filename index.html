@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="コウテイちゃん">
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>コウテイちゃん — 今日のあなたを、ぎゅっと</title>
 <style>
   :root{
@@ -23,6 +24,7 @@
   .app{max-width:480px;margin:0 auto;padding:0 18px 120px;}
   .kotei{display:inline-block;line-height:0;}
   .kotei svg{display:block;}
+  .kotei img{display:block;width:100%;height:100%;object-fit:contain;}
   header{padding:24px 0 4px;text-align:center;}
   header .kotei{width:64px;height:64px;margin-bottom:6px;}
   header h1{font-size:20px;font-weight:700;margin:0;letter-spacing:.04em;}
@@ -103,27 +105,15 @@
   .rec-note{color:var(--ink-soft);font-size:13px;display:inline-block;margin-top:2px;}
   .rec-tag{font-size:11px;background:var(--rose-soft);color:var(--rose-deep);padding:2px 8px;border-radius:999px;}
   .rec-tag.ok{background:var(--leaf-soft);color:var(--leaf-deep);}
+  .rec-month{font-size:14px;font-weight:700;color:var(--ink);margin:20px 0 10px;letter-spacing:.03em;}
+  .promise-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--leaf-soft);border:1.5px solid var(--leaf);border-radius:var(--radius-sm);padding:13px 15px;font-size:15px;font-weight:600;color:var(--leaf-deep);}
+  .promise-card button{background:none;border:none;font-family:inherit;font-size:12.5px;color:var(--ink-faint);cursor:pointer;text-decoration:underline;padding:2px;}
 </style>
 </head>
 <body>
 <div class="app">
-  <template id="kotei-face">
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="コウテイちゃん">
-      <circle cx="50" cy="52" r="40" fill="#FBEAE4"/>
-      <circle cx="50" cy="52" r="40" fill="none" stroke="#E0907F" stroke-width="2.5"/>
-      <circle cx="24" cy="58" r="7" fill="#F4C9BC"/>
-      <circle cx="76" cy="58" r="7" fill="#F4C9BC"/>
-      <circle cx="38" cy="50" r="4.2" fill="#3A322E"/>
-      <circle cx="62" cy="50" r="4.2" fill="#3A322E"/>
-      <circle cx="39.4" cy="48.6" r="1.3" fill="#fff"/>
-      <circle cx="63.4" cy="48.6" r="1.3" fill="#fff"/>
-      <path d="M42 62 Q50 69 58 62" fill="none" stroke="#C26B58" stroke-width="2.6" stroke-linecap="round"/>
-      <path d="M30 30 Q50 18 70 30" fill="none" stroke="#8FA079" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="50" cy="22" r="4" fill="#D8A85E"/>
-    </svg>
-  </template>
   <header>
-    <span class="kotei" data-kotei></span>
+    <span class="kotei" data-kotei="body"></span>
     <h1>コウテイちゃん</h1>
     <p class="tagline">今日のあなたを、ぎゅっと抱きしめる</p>
   </header>
@@ -187,8 +177,12 @@ function key(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'
 const WD=['日','月','火','水','木','金','土'];
 function fmtDate(d){return (d.getMonth()+1)+'月'+d.getDate()+'日('+WD[d.getDay()]+')';}
 function weekKey(d){const t=new Date(d);const day=(t.getDay()+6)%7;t.setDate(t.getDate()-day);return 'W'+key(t);}
-function faceClone(){return document.getElementById('kotei-face').content.cloneNode(true);}
-function mountFaces(){document.querySelectorAll('[data-kotei]').forEach(s=>{if(!s.hasChildNodes())s.appendChild(faceClone());});}
+const PKEY='kotei.promise.v1';
+function getPromise(){try{return localStorage.getItem(PKEY)||'';}catch(e){return '';}}
+function setPromiseVal(v){try{localStorage.setItem(PKEY,v);}catch(e){}}
+const FACES={normal:'kotei-normal.png',care:'kotei-care.png',cheer:'kotei-cheer.png',body:'kotei-body.png'};
+function faceClone(kind){const img=document.createElement('img');img.src=FACES[kind]||FACES.normal;img.alt='コウテイちゃん';return img;}
+function mountFaces(){document.querySelectorAll('[data-kotei]').forEach(s=>{if(!s.hasChildNodes())s.appendChild(faceClone(s.dataset.kotei));});}
 function countYes(e){let n=0;if(e.q1_done)n++;if((e.q2_tags||[]).length)n++;if(e.q3_pick===0)n++;if((e.q4_note||'').trim())n++;if(e.q5_done)n++;if(e.q6_done)n++;return n;}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 const Q2_TAGS=['優しかった','頑張った','誠実だった','挑戦した','正直だった','思いやれた','あきらめなかった'];
@@ -197,7 +191,14 @@ const todayKey=key(new Date());
 let dstate={}; let didx=0;
 const DAILY_SLIDES=[
   {key:'q1', step:'1 / 6 ・ 自分との約束', q:'今日、自分との小さな約束を守れた？', sub:'「自分は約束を守る人間だ」その感覚が、自信を育てるよ。',
-   render:s=>'<div class="field-label">今日の約束（自由に決めてね）</div><input type="text" id="q1_promise" placeholder="例：朝7時に起きる / 本を20ページ / 10分散歩する" value="'+esc(s.q1_promise||'')+'"><div style="height:14px"></div><div class="yn"><button data-yn="q1_done" data-v="1" class="'+(s.q1_done===true?'on':'')+'">守れた ◎</button><button data-yn="q1_done" data-v="0" class="no '+(s.q1_done===false?'on no':'')+'">今日はできなかった</button></div>'},
+   render:s=>{
+     const p=s.q1_promise!=null?s.q1_promise:getPromise();
+     const editing=s._editPromise===true||!p;
+     const promiseUI=editing
+       ?'<div class="field-label">あなたの約束（一度決めれば、毎日は選ぶだけ）</div><input type="text" id="q1_promise" placeholder="例：朝7時に起きる / 本を20ページ / 10分散歩する" value="'+esc(p||'')+'">'
+       :'<div class="promise-card"><span>'+esc(p)+'</span><button type="button" id="edit-promise">変える</button></div>';
+     return promiseUI+'<div style="height:14px"></div><div class="yn"><button data-yn="q1_done" data-v="1" class="'+(s.q1_done===true?'on':'')+'">守れた ◎</button><button data-yn="q1_done" data-v="0" class="no '+(s.q1_done===false?'on no':'')+'">今日はできなかった</button></div>';
+   }},
   {key:'q2', step:'2 / 6 ・ 人格を磨けた行動', q:'今日、あなたの人格を磨けた行動は？', sub:'成果じゃなくていい。どんなふうに在れたか、を選んでね。',
    render:s=>'<div class="tags" id="q2_tags">'+Q2_TAGS.map(t=>'<button data-tag="'+t+'" class="'+((s.q2_tags||[]).includes(t)?'on':'')+'">'+t+'</button>').join('')+'</div><div class="field-label">どんな場面だった？（任意）</div><textarea id="q2_note" placeholder="例：忙しい後輩に「手伝おうか」と声をかけられた">'+esc(s.q2_note||'')+'</textarea>'},
   {key:'q3', step:'3 / 6 ・ 感情を否定しない', q:'ネガティブな感情を、否定しなかった？', sub:'感情と人格は別もの。感じること自体は、悪いことじゃないよ。',
@@ -214,7 +215,7 @@ function renderDaily(){
   const existing=store.getDaily(todayKey);
   if(existing && Object.keys(dstate).length===0){
     const fb=kotei.daily(existing);
-    v.innerHTML='<div class="speech warm"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'+fb.head+'</div></div></div><div class="deck"><div class="result"><span class="kotei" data-kotei></span><h3>今日の記録、ぜんぶ受けとったよ</h3><p>'+fb.body+'</p><p class="hint">また明日も、待ってるね。</p></div><div class="deck-nav"><button class="btn ghost" id="edit-today">書き直す</button><button class="btn primary" id="go-weekly">ふりかえりを見る</button></div></div>';
+    v.innerHTML='<div class="speech warm"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'+fb.head+'</div></div></div><div class="deck"><div class="result"><span class="kotei" data-kotei="cheer"></span><h3>今日の記録、ぜんぶ受けとったよ</h3><p>'+fb.body+'</p><p class="hint">また明日も、待ってるね。</p></div><div class="deck-nav"><button class="btn ghost" id="edit-today">書き直す</button><button class="btn primary" id="go-weekly">ふりかえりを見る</button></div></div>';
     mountFaces();
     document.getElementById('edit-today').onclick=()=>{dstate={...existing};didx=0;renderDeck();};
     document.getElementById('go-weekly').onclick=()=>switchView('weekly');
@@ -234,13 +235,15 @@ function renderDeck(){
   document.getElementById('next').onclick=()=>{captureSlide(s);if(didx<total-1){didx++;renderDeck();}else{finishDaily();}};
 }
 function wireSlide(s){
+  const ep=document.getElementById('edit-promise');
+  if(ep)ep.onclick=()=>{dstate._editPromise=true;dstate.q1_promise=getPromise();renderDeck();};
   document.querySelectorAll('[data-yn]').forEach(b=>{b.onclick=()=>{const k=b.dataset.yn;document.querySelectorAll('[data-yn="'+k+'"]').forEach(x=>x.classList.remove('on'));b.classList.add('on');};});
   document.querySelectorAll('#q2_tags button').forEach(b=>{b.onclick=()=>b.classList.toggle('on');});
   document.querySelectorAll('#q3_tags button').forEach(b=>{b.onclick=()=>{document.querySelectorAll('#q3_tags button').forEach(x=>x.classList.remove('on'));b.classList.add('on');};});
 }
 function captureSlide(s){
   const g=id=>document.getElementById(id);
-  if(s.key==='q1'){ if(g('q1_promise'))dstate.q1_promise=g('q1_promise').value; const on=document.querySelector('[data-yn="q1_done"].on'); if(on)dstate.q1_done=on.dataset.v==='1'; }
+  if(s.key==='q1'){ const inp=g('q1_promise'); if(inp){dstate.q1_promise=inp.value; if(inp.value.trim())setPromiseVal(inp.value.trim());} else {dstate.q1_promise=getPromise();} delete dstate._editPromise; const on=document.querySelector('[data-yn="q1_done"].on'); if(on)dstate.q1_done=on.dataset.v==='1'; }
   if(s.key==='q2'){ dstate.q2_tags=[...document.querySelectorAll('#q2_tags button.on')].map(b=>b.dataset.tag); if(g('q2_note'))dstate.q2_note=g('q2_note').value; }
   if(s.key==='q3'){ const on=document.querySelector('#q3_tags button.on'); if(on)dstate.q3_pick=+on.dataset.q3; if(g('q3_note'))dstate.q3_note=g('q3_note').value; }
   if(s.key==='q4'){ if(g('q4_note'))dstate.q4_note=g('q4_note').value; }
@@ -265,22 +268,49 @@ function renderWeekly(){
   const totalActions=filled.reduce((a,d)=>a+countYes(d.entry),0);
   const stripHtml=days.map(d=>{const has=!!d.entry;return '<div class="d"><div class="w">'+WD[d.date.getDay()]+'</div><div class="o'+(has?' has':'')+'">'+(has?'🌷':'')+'</div></div>';}).join('');
   const notes=filled.filter(d=>d.entry.q4_note&&d.entry.q4_note.trim()).reverse();
-  const notesHtml=notes.length?notes.map(d=>'<div class="note-card"><div class="meta"><span>'+fmtDate(d.date)+'</span></div><div class="body">'+esc(d.entry.q4_note)+'</div></div>').join(''):'<div class="empty"><span class="kotei" data-kotei></span>まだ「できたこと」の記録がないよ。<br>きょうのタブから、ひとつ書いてみよう。</div>';
-  if(!saved && wstate._editing!==true && !wstate._justSaved){
-    const goodPH=['仕事で褒められた','旅行した','友達と笑った','本が面白かった','親と話した','運動できた','空が綺麗だった','ごはんが美味しかった','ぐっすり眠れた','自分を労われた'];
-    v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>週に一度、すこし大きな目で自分を見てみよう。毎日じゃなくていいからね。</div></div></div><div class="deck"><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin-bottom:8px;">週次チェック 1 / 2 ・ 人生の柱</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">今週、それぞれの柱はどのくらい充実してた？</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">柱が多いほど、ひとつ折れても倒れない。無理に全部埋めなくていいよ。</p><div id="pillars">'+PILLARS.map(p=>'<div class="pillar"><div class="top"><b>'+p+'</b><span class="val" id="v-'+p+'">3</span></div><input type="range" min="0" max="5" step="1" value="3" data-pillar="'+p+'"><input type="text" data-pmemo="'+p+'" placeholder="ひとことメモ（任意）" style="margin-top:7px;font-size:13px;"></div>').join('')+'</div><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin:18px 0 8px;">週次チェック 2 / 2 ・ 人生の面積</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">柱が1本なくても、今週よかったこと</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">いくつでもいい。書いた数だけ、あなたの人生の面積が広がるよ。</p><div class="ten" id="goods">'+Array.from({length:10}).map((_,i)=>'<input type="text" data-good="'+i+'" placeholder="'+(i+1)+'. '+goodPH[i]+'">').join('')+'</div><div class="deck-nav"><button class="btn primary" id="save-weekly">コウテイちゃんに渡す</button></div></div><div class="section-label">この7日間</div><div class="stats"><div class="stat"><div class="n leaf">'+filled.length+'</div><div class="l">記録した日</div></div><div class="stat"><div class="n">'+totalActions+'</div><div class="l">できたこと</div></div><div class="stat"><div class="n rose">'+notes.length+'</div><div class="l">書いた日</div></div></div><div class="strip">'+stripHtml+'</div>';
-    mountFaces();
-    document.querySelectorAll('[data-pillar]').forEach(r=>{r.oninput=()=>document.getElementById('v-'+r.dataset.pillar).textContent=r.value;});
-    document.getElementById('save-weekly').onclick=saveWeekly;
-    return;
+  const notesHtml=notes.length?notes.map(d=>'<div class="note-card"><div class="meta"><span>'+fmtDate(d.date)+'</span></div><div class="body">'+esc(d.entry.q4_note)+'</div></div>').join(''):'<div class="empty"><span class="kotei" data-kotei="care"></span>まだ「できたこと」の記録がないよ。<br>きょうのタブから、ひとつ書いてみよう。</div>';
+
+  /* 入力フォームは、ユーザーが自分でボタンを押したときだけ */
+  if(wstate._filling===true){ renderWeeklyForm(saved); return; }
+
+  /* ---- 通常は「ながめる」ビュー ---- */
+  let html='';
+  if(saved){
+    const fb=kotei.weekly(saved, days);
+    const standing=Object.values(saved.pillars||{}).filter(x=>x>=3).length;
+    const goods=(saved.goods||[]).filter(g=>g&&g.trim()).length;
+    html+='<div class="speech warm"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'+fb.head+'</div></div></div>';
+    html+='<div class="deck" style="min-height:auto"><div class="result"><span class="kotei" data-kotei="cheer"></span><h3>今週のあなたへ</h3><p>'+fb.body+'</p></div></div>';
+    html+='<div class="stats"><div class="stat"><div class="n leaf">'+filled.length+'</div><div class="l">記録した日</div></div><div class="stat"><div class="n">'+standing+'</div><div class="l">立ってる柱</div></div><div class="stat"><div class="n rose">'+goods+'</div><div class="l">よかったこと</div></div></div>';
+    html+='<div class="strip">'+stripHtml+'</div>';
+    html+='<div class="section-label">この週の「できたこと」</div>'+notesHtml;
+    html+='<div class="deck-nav" style="margin-top:14px"><button class="btn ghost" id="start-weekly" style="flex:1">週次チェックを書き直す</button></div>';
+  } else {
+    html+='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>今週も、ここまでよく歩いてきたね。</div></div></div>';
+    html+='<div class="stats"><div class="stat"><div class="n leaf">'+filled.length+'</div><div class="l">記録した日</div></div><div class="stat"><div class="n">'+totalActions+'</div><div class="l">できたこと</div></div><div class="stat"><div class="n rose">'+notes.length+'</div><div class="l">書いた日</div></div></div>';
+    html+='<div class="strip">'+stripHtml+'</div>';
+    /* 週の後半だけ、コウテイちゃんがやさしく誘う */
+    const dow=new Date().getDay(); /* 金土日 = 5,6,0 */
+    const invite=(dow===5||dow===6||dow===0);
+    html+='<div class="deck" style="min-height:auto"><div class="result" style="padding:4px"><span class="kotei" data-kotei style="width:56px;height:56px"></span><h3 style="font-size:16px">'+(invite?'そろそろ、今週をまとめてみない？':'週次チェックは、週の終わりにゆっくりでいいからね')+'</h3><p style="font-size:13.5px;color:var(--ink-soft)">人生の柱と、よかったこと。5分だけ、大きな目で自分を見てみよう。</p></div><div class="deck-nav"><button class="btn primary" id="start-weekly">週次チェックをはじめる</button></div></div>';
+    html+='<div class="section-label">この週の「できたこと」</div>'+notesHtml;
   }
-  const w=saved||{};
-  const fb=kotei.weekly(w, days);
-  const standing=Object.values(w.pillars||{}).filter(x=>x>=3).length;
-  const goods=(w.goods||[]).filter(g=>g&&g.trim()).length;
-  v.innerHTML='<div class="speech warm"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'+fb.head+'</div></div></div><div class="deck"><div class="result"><span class="kotei" data-kotei></span><h3>今週のあなたへ</h3><p>'+fb.body+'</p></div></div><div class="stats"><div class="stat"><div class="n leaf">'+filled.length+'</div><div class="l">記録した日</div></div><div class="stat"><div class="n">'+standing+'</div><div class="l">立ってる柱</div></div><div class="stat"><div class="n rose">'+goods+'</div><div class="l">よかったこと</div></div></div><div class="strip">'+stripHtml+'</div><div class="section-label">この週の「できたこと」</div>'+notesHtml+'<div class="deck-nav" style="margin-top:14px"><button class="btn ghost" id="redo-weekly" style="flex:1">週次チェックを書き直す</button></div>';
+  v.innerHTML=html;
   mountFaces();
-  document.getElementById('redo-weekly').onclick=()=>{wstate._editing=true;wstate._justSaved=false;renderWeekly();};
+  const sw=document.getElementById('start-weekly');
+  if(sw)sw.onclick=()=>{wstate._filling=true;renderWeekly();window.scrollTo(0,0);};
+}
+function renderWeeklyForm(saved){
+  const v=document.getElementById('view-weekly');
+  const goodPH=['仕事で褒められた','旅行した','友達と笑った','本が面白かった','親と話した','運動できた','空が綺麗だった','ごはんが美味しかった','ぐっすり眠れた','自分を労われた'];
+  const sp=(saved&&saved.pillars)||{};
+  const sm=(saved&&saved.pmemos)||{};
+  const sg=(saved&&saved.goods)||[];
+  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>週に一度、すこし大きな目で自分を見てみよう。全部埋めなくていいからね。</div></div></div><div class="deck"><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin-bottom:8px;">週次チェック 1 / 2 ・ 人生の柱</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">今週、それぞれの柱はどのくらい充実してた？</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">柱が多いほど、ひとつ折れても倒れない。</p><div id="pillars">'+PILLARS.map(p=>'<div class="pillar"><div class="top"><b>'+p+'</b><span class="val" id="v-'+p+'">'+(sp[p]!=null?sp[p]:3)+'</span></div><input type="range" min="0" max="5" step="1" value="'+(sp[p]!=null?sp[p]:3)+'" data-pillar="'+p+'"><input type="text" data-pmemo="'+p+'" placeholder="ひとことメモ（任意）" style="margin-top:7px;font-size:13px;" value="'+esc(sm[p]||'')+'"></div>').join('')+'</div><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin:18px 0 8px;">週次チェック 2 / 2 ・ 人生の面積</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">柱が1本なくても、今週よかったこと</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">いくつでもいい。書いた数だけ、人生の面積が広がるよ。</p><div class="ten" id="goods">'+Array.from({length:10}).map((_,i)=>'<input type="text" data-good="'+i+'" placeholder="'+(i+1)+'. '+goodPH[i]+'" value="'+esc(sg[i]||'')+'">').join('')+'</div><div class="deck-nav"><button class="btn ghost" id="cancel-weekly">やめる</button><button class="btn primary" id="save-weekly">コウテイちゃんに渡す</button></div></div>';
+  mountFaces();
+  document.querySelectorAll('[data-pillar]').forEach(r=>{r.oninput=()=>document.getElementById('v-'+r.dataset.pillar).textContent=r.value;});
+  document.getElementById('save-weekly').onclick=saveWeekly;
+  document.getElementById('cancel-weekly').onclick=()=>{wstate._filling=false;renderWeekly();window.scrollTo(0,0);};
 }
 function saveWeekly(){
   const pillars={};
@@ -288,7 +318,7 @@ function saveWeekly(){
   const pmemos={};document.querySelectorAll('[data-pmemo]').forEach(i=>{if(i.value.trim())pmemos[i.dataset.pmemo]=i.value.trim();});
   const goods=[...document.querySelectorAll('[data-good]')].map(i=>i.value.trim()).filter(Boolean);
   store.saveWeekly(thisWeek,{pillars,pmemos,goods});
-  wstate={_justSaved:true,_editing:false};
+  wstate={_filling:false};
   renderWeekly();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -297,52 +327,66 @@ function saveWeekly(){
    日次のq2/q3/q4/q5/q6メモ + 週次の柱メモ・よかったこと を時系列でまとめる。
    ===================================================================== */
 const Q3_LABELS=['感情を受け止められた','まだ難しかった','ネガティブはなかった'];
+let recFilter='all';
 function renderRecord(){
   const v=document.getElementById('view-record');
   const all=store._r(store.DKEY);
   const dates=Object.keys(all).sort().reverse();
-  // collect weekly too
   const weeks=store._r(store.WKEY);
   let html='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>あなたが歩いてきた道だよ。ゆっくり、ながめてね。</div></div></div>';
 
   if(dates.length===0 && Object.keys(weeks).length===0){
-    html+='<div class="empty"><span class="kotei" data-kotei></span>まだ記録がないよ。<br>きょうのタブから、はじめてみよう。</div>';
+    html+='<div class="empty"><span class="kotei" data-kotei="care"></span>まだ記録がないよ。<br>きょうのタブから、はじめてみよう。</div>';
     v.innerHTML=html; mountFaces(); return;
   }
 
-  html+='<div class="section-label">日々のきろく</div>';
-  dates.forEach(dk=>{
-    const e=all[dk];
-    const d=new Date(dk+'T00:00:00');
-    let items=[];
-    if((e.q2_tags||[]).length) items.push('<b>磨けた人格</b> '+e.q2_tags.join('・')+(e.q2_note?'<br><span class="rec-note">'+esc(e.q2_note)+'</span>':''));
-    if(e.q3_note&&e.q3_note.trim()) items.push('<b>気持ち</b> '+(e.q3_pick!=null?'<span class="rec-tag">'+Q3_LABELS[e.q3_pick]+'</span> ':'')+'<br><span class="rec-note">'+esc(e.q3_note)+'</span>');
-    if(e.q4_note&&e.q4_note.trim()) items.push('<b>できたこと</b><br><span class="rec-note">'+esc(e.q4_note)+'</span>');
-    if(e.q5_note&&e.q5_note.trim()) items.push('<b>人への貢献</b><br><span class="rec-note">'+esc(e.q5_note)+'</span>');
-    if(e.q6_note&&e.q6_note.trim()) items.push('<b>ひとり時間</b><br><span class="rec-note">'+esc(e.q6_note)+'</span>');
-    if(e.q1_promise&&e.q1_promise.trim()) items.push('<b>自分との約束</b> '+esc(e.q1_promise)+(e.q1_done?' <span class="rec-tag ok">守れた</span>':''));
-    if(items.length===0) return;
-    html+='<div class="rec-card"><div class="rec-date">'+fmtDate(d)+'</div>'+items.map(it=>'<div class="rec-item">'+it+'</div>').join('')+'</div>';
-  });
+  /* フィルタチップ */
+  const FILTERS=[['all','すべて'],['promise','約束'],['jinkaku','人格'],['kimochi','気持ち'],['dekita','できたこと'],['kouken','貢献'],['hitori','ひとり時間'],['weekly','週次']];
+  html+='<div class="tags" style="margin:4px 0 14px;">'+FILTERS.map(f=>'<button data-rf="'+f[0]+'" class="'+(recFilter===f[0]?'on':'')+'">'+f[1]+'</button>').join('')+'</div>';
 
-  const wkeys=Object.keys(weeks).sort().reverse();
-  if(wkeys.length){
-    html+='<div class="section-label">週次のきろく</div>';
+  /* 日次：月ごとにグループ */
+  if(recFilter!=='weekly'){
+    let curMonth='';
+    let dailyHtml='';
+    dates.forEach(dk=>{
+      const e=all[dk];
+      const d=new Date(dk+'T00:00:00');
+      let items=[];
+      if((recFilter==='all'||recFilter==='promise') && e.q1_promise&&e.q1_promise.trim()) items.push('<div class="rec-item"><b>自分との約束</b> '+esc(e.q1_promise)+(e.q1_done?' <span class="rec-tag ok">守れた</span>':'')+'</div>');
+      if((recFilter==='all'||recFilter==='jinkaku') && (e.q2_tags||[]).length) items.push('<div class="rec-item"><b>磨けた人格</b> '+e.q2_tags.join('・')+(e.q2_note?'<br><span class="rec-note">'+esc(e.q2_note)+'</span>':'')+'</div>');
+      if((recFilter==='all'||recFilter==='kimochi') && e.q3_note&&e.q3_note.trim()) items.push('<div class="rec-item"><b>気持ち</b> '+(e.q3_pick!=null?'<span class="rec-tag">'+Q3_LABELS[e.q3_pick]+'</span> ':'')+'<br><span class="rec-note">'+esc(e.q3_note)+'</span></div>');
+      if((recFilter==='all'||recFilter==='dekita') && e.q4_note&&e.q4_note.trim()) items.push('<div class="rec-item"><b>できたこと</b><br><span class="rec-note">'+esc(e.q4_note)+'</span></div>');
+      if((recFilter==='all'||recFilter==='kouken') && e.q5_note&&e.q5_note.trim()) items.push('<div class="rec-item"><b>人への貢献</b><br><span class="rec-note">'+esc(e.q5_note)+'</span></div>');
+      if((recFilter==='all'||recFilter==='hitori') && e.q6_note&&e.q6_note.trim()) items.push('<div class="rec-item"><b>ひとり時間</b><br><span class="rec-note">'+esc(e.q6_note)+'</span></div>');
+      if(items.length===0) return;
+      const mLabel=d.getFullYear()+'年'+(d.getMonth()+1)+'月';
+      if(mLabel!==curMonth){curMonth=mLabel;dailyHtml+='<div class="rec-month">'+mLabel+'</div>';}
+      dailyHtml+='<div class="rec-card"><div class="rec-date">'+fmtDate(d)+'</div>'+items.join('')+'</div>';
+    });
+    if(dailyHtml){html+='<div class="section-label">日々のきろく</div>'+dailyHtml;}
+  }
+
+  /* 週次 */
+  if(recFilter==='all'||recFilter==='weekly'){
+    const wkeys=Object.keys(weeks).sort().reverse();
+    let weekHtml='';
     wkeys.forEach(wk=>{
       const w=weeks[wk];
       const label=wk.replace('W','')+' の週';
       let parts=[];
       const pmemos=w.pmemos||{};
       const pmemoKeys=Object.keys(pmemos);
-      if(pmemoKeys.length) parts.push('<b>柱のメモ</b><br>'+pmemoKeys.map(k=>'<span class="rec-note">'+k+'：'+esc(pmemos[k])+'</span>').join('<br>'));
+      if(pmemoKeys.length) parts.push('<div class="rec-item"><b>柱のメモ</b><br>'+pmemoKeys.map(k=>'<span class="rec-note">'+k+'：'+esc(pmemos[k])+'</span>').join('<br>')+'</div>');
       const goods=(w.goods||[]).filter(g=>g&&g.trim());
-      if(goods.length) parts.push('<b>よかったこと '+goods.length+'個</b><br><span class="rec-note">'+goods.map(esc).join('<br>')+'</span>');
+      if(goods.length) parts.push('<div class="rec-item"><b>よかったこと '+goods.length+'個</b><br><span class="rec-note">'+goods.map(esc).join('<br>')+'</span></div>');
       if(parts.length===0) return;
-      html+='<div class="rec-card"><div class="rec-date">'+label+'</div>'+parts.map(p=>'<div class="rec-item">'+p+'</div>').join('')+'</div>';
+      weekHtml+='<div class="rec-card"><div class="rec-date">'+label+'</div>'+parts.join('')+'</div>';
     });
+    if(weekHtml){html+='<div class="section-label">週次のきろく</div>'+weekHtml;}
   }
 
   v.innerHTML=html; mountFaces();
+  document.querySelectorAll('[data-rf]').forEach(b=>{b.onclick=()=>{recFilter=b.dataset.rf;renderRecord();};});
 }
 
 function switchView(view){
