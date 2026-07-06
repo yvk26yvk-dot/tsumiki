@@ -371,10 +371,11 @@ function renderRecord(){
   const dates=Object.keys(all).sort().reverse();
   const weeks=store._r(store.WKEY);
   let html='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>あなたが歩いてきた道だよ。ゆっくり、ながめてね。</div></div></div>';
+  const logoutHtml='<div style="text-align:center;margin:30px 0 6px"><button class="linklike" id="logout">ログアウト</button></div>';
 
   if(dates.length===0 && Object.keys(weeks).length===0){
-    html+='<div class="empty"><span class="kotei" data-kotei="care"></span>まだ記録がないよ。<br>きょうのタブから、はじめてみよう。</div>';
-    v.innerHTML=html; mountFaces(); return;
+    html+='<div class="empty"><span class="kotei" data-kotei="care"></span>まだ記録がないよ。<br>きょうのタブから、はじめてみよう。</div>'+logoutHtml;
+    v.innerHTML=html; mountFaces(); wireLogout(); return;
   }
 
   /* フィルタチップ */
@@ -422,8 +423,23 @@ function renderRecord(){
     if(weekHtml){html+='<div class="section-label">週次のきろく</div>'+weekHtml;}
   }
 
+  html+=logoutHtml;
   v.innerHTML=html; mountFaces();
   document.querySelectorAll('[data-rf]').forEach(b=>{b.onclick=()=>{recFilter=b.dataset.rf;renderRecord();};});
+  wireLogout();
+}
+
+function wireLogout(){
+  const lo=document.getElementById('logout');
+  if(!lo) return;
+  lo.onclick=async()=>{
+    const pending=Object.keys(store._r(store.OKEY)).length;
+    if(pending>0 && !confirm('まだクラウドに送れていない記録が'+pending+'件あるよ。ログアウトすると、この端末からは消えちゃう。それでもログアウトする?')) return;
+    if(pending===0 && !confirm('ログアウトする? 記録はクラウドにちゃんと残ってるから、安心してね。')) return;
+    await sb.auth.signOut();
+    ['kotei.daily.v1','kotei.weekly.v1','kotei.promise.v1','kotei.outbox.v1','kotei.migrated.v1'].forEach(k=>localStorage.removeItem(k));
+    location.reload();
+  };
 }
 
 function switchView(view){
