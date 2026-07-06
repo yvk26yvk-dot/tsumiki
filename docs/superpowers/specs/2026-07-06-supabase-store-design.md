@@ -34,8 +34,11 @@ UI(無変更) ──同期呼び出し──> store層
 
 ## 1. 起動フローと認証UI
 
-- supabase-js v2 UMD を jsDelivr からバージョン固定の `<script>` 1本で読み込む
-  (ビルド工程なし維持。sw.jsのcache-firstで2回目以降はオフラインでも読める)。
+- supabase-js v2 UMD(2.110.0)を `supabase.min.js` としてリポジトリに同梱し
+  `<script>` 1本で読み込む(ビルド工程なし維持)。
+  ※当初はjsDelivr CDN参照だったが、sw.jsのCACHEバージョン更新時に
+  ランタイムキャッシュごと消えてオフライン起動が壊れるため、最終レビューで
+  同梱+ASSETSプリキャッシュに変更(実装済み)。
 - URL/キーは index.html に定数として直書き。
 - 起動シーケンス:
   1. `sb.auth.getSession()` でセッション確認
