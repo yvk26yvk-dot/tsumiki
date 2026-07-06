@@ -141,7 +141,7 @@
     <span>きろく</span>
   </button>
 </nav>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.min.js"></script>
 <script>
 const SUPABASE_URL='https://zfntwysyrioqxznlhxhm.supabase.co';
 const SUPABASE_KEY='sb_publishable_OKH_JjMgl8814Xye_3QhwQ_q4JBxa1K';
@@ -473,14 +473,16 @@ function renderAuth(notice){
   mountFaces();
   document.getElementById('auth-toggle').onclick=()=>{authMode=isUp?'login':'signup';renderAuth();};
   document.getElementById('auth-go').onclick=doAuth;
-  document.getElementById('auth-pw').onkeydown=e=>{if(e.key==='Enter')doAuth();};
+  const authEnter=e=>{if(e.key==='Enter'&&!document.getElementById('auth-go').disabled)doAuth();};
+  document.getElementById('auth-email').onkeydown=authEnter;
+  document.getElementById('auth-pw').onkeydown=authEnter;
 }
 function authErrMsg(err){
   const m=(err&&err.message)||'';
   if(m.includes('Invalid login credentials'))return 'メールかパスワードが違うみたい。もう一度みてくれる?';
   if(m.includes('already registered'))return 'そのメールはもう登録されてるよ。ログインしてみてね。';
   if(m.includes('at least 6'))return 'パスワードは6文字以上にしてね。';
-  if(m.includes('valid email'))return 'メールアドレスの形が違うみたい。';
+  if(m.includes('invalid format')||m.includes('valid email'))return 'メールアドレスの形が違うみたい。';
   return 'うまくいかなかったみたい。すこし待ってもう一度ためしてみてね。('+m+')';
 }
 async function doAuth(){
@@ -508,6 +510,11 @@ function toast(msg){
   requestAnimationFrame(()=>t.classList.add('show'));
   setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),400);},4500);
 }
+function canonJson(v){
+  if(Array.isArray(v))return '['+v.map(canonJson).join(',')+']';
+  if(v&&typeof v==='object')return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonJson(v[k])).join(',')+'}';
+  return JSON.stringify(v);
+}
 /* 起動時同期: クラウド→ローカルにプル。未送信キーはローカル優先。
    ローカルだけにあるキーはキューへ(初回移行もオフライン復帰もこの1規則) */
 async function bootSync(){
@@ -527,7 +534,7 @@ async function bootSync(){
       const local=store._r(storageKey), cloud={};
       (res.data||[]).forEach(r=>{cloud[r[keyCol]]=r.entry;});
       Object.keys(cloud).forEach(k=>{
-        if(!q[type+'|'+k] && JSON.stringify(local[k])!==JSON.stringify(cloud[k])){local[k]=cloud[k];changed=true;}
+        if(!q[type+'|'+k] && canonJson(local[k])!==canonJson(cloud[k])){local[k]=cloud[k];changed=true;}
       });
       Object.keys(local).forEach(k=>{
         if(!cloud[k] && !q[type+'|'+k]){store._enq(type,k);toMigrate++;}

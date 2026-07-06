@@ -1,5 +1,5 @@
 const CACHE = 'kotei-v4';
-const ASSETS = ['./index.html','./manifest.json','./kotei-normal.png','./kotei-care.png','./kotei-cheer.png','./kotei-body.png','./icon-192.png'];
+const ASSETS = ['./index.html','./manifest.json','./kotei-normal.png','./kotei-care.png','./kotei-cheer.png','./kotei-body.png','./icon-192.png','./supabase.min.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
