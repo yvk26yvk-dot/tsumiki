@@ -147,14 +147,40 @@ const SUPABASE_URL='https://zfntwysyrioqxznlhxhm.supabase.co';
 const SUPABASE_KEY='sb_publishable_OKH_JjMgl8814Xye_3QhwQ_q4JBxa1K';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const store = {
-  DKEY:'kotei.daily.v1', WKEY:'kotei.weekly.v1',
+  DKEY:'kotei.daily.v1', WKEY:'kotei.weekly.v1', OKEY:'kotei.outbox.v1',
   _r(k){ try{return JSON.parse(localStorage.getItem(k))||{};}catch(e){return {};} },
   _w(k,o){ try{localStorage.setItem(k,JSON.stringify(o));return true;}catch(e){return false;} },
   getDaily(d){ return this._r(this.DKEY)[d]||null; },
-  saveDaily(d,e){ const a=this._r(this.DKEY); a[d]={...e,savedAt:new Date().toISOString()}; return this._w(this.DKEY,a); },
+  saveDaily(d,e){ const a=this._r(this.DKEY); a[d]={...e,savedAt:new Date().toISOString()}; const ok=this._w(this.DKEY,a); this._enq('daily',d); this.flush(); return ok; },
   recentDaily(n){ const o=[]; for(let i=n-1;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const k=key(dt);o.push({key:k,date:dt,entry:this._r(this.DKEY)[k]||null});} return o; },
   getWeekly(w){ return this._r(this.WKEY)[w]||null; },
-  saveWeekly(w,e){ const a=this._r(this.WKEY); a[w]={...e,savedAt:new Date().toISOString()}; return this._w(this.WKEY,a); }
+  saveWeekly(w,e){ const a=this._r(this.WKEY); a[w]={...e,savedAt:new Date().toISOString()}; const ok=this._w(this.WKEY,a); this._enq('weekly',w); this.flush(); return ok; },
+
+  /* --- ここからSupabase同期。UIから見えるAPIは上と同じ・同期のまま --- */
+  _enq(t,k){ const q=this._r(this.OKEY); q[t+'|'+k]=1; this._w(this.OKEY,q); },
+  _flushing:false,
+  async flush(){
+    if(this._flushing) return; this._flushing=true;
+    try{
+      const {data:{session}}=await sb.auth.getSession();
+      if(!session) return;
+      const uid=session.user.id, failed=new Set();
+      /* 毎回キューを読み直す: 送信中に新しい保存が入っても取りこぼさない */
+      while(true){
+        const q=this._r(this.OKEY);
+        const id=Object.keys(q).find(x=>!failed.has(x));
+        if(!id) break;
+        const sep=id.indexOf('|'), t=id.slice(0,sep), k=id.slice(sep+1);
+        let error=null;
+        if(t==='daily'){ const e=this._r(this.DKEY)[k]; if(e){({error}=await sb.from('daily').upsert({user_id:uid,date_key:k,entry:e,saved_at:e.savedAt})); } }
+        else if(t==='weekly'){ const e=this._r(this.WKEY)[k]; if(e){({error}=await sb.from('weekly').upsert({user_id:uid,week_key:k,entry:e,saved_at:e.savedAt})); } }
+        else if(t==='profile'){ ({error}=await sb.from('profiles').upsert({id:uid,promise:getPromise(),updated_at:new Date().toISOString()})); }
+        if(error){ failed.add(id); continue; }  /* キューに残して次の機会に再送 */
+        const cur=this._r(this.OKEY); delete cur[id]; this._w(this.OKEY,cur);
+      }
+    }catch(e){ /* オフライン等。キューに残っているので次のflushで再送される */ }
+    finally{ this._flushing=false; }
+  }
 };
 const kotei = {
   daily(e){
@@ -189,7 +215,8 @@ function fmtDate(d){return (d.getMonth()+1)+'月'+d.getDate()+'日('+WD[d.getDay
 function weekKey(d){const t=new Date(d);const day=(t.getDay()+6)%7;t.setDate(t.getDate()-day);return 'W'+key(t);}
 const PKEY='kotei.promise.v1';
 function getPromise(){try{return localStorage.getItem(PKEY)||'';}catch(e){return '';}}
-function setPromiseVal(v){try{localStorage.setItem(PKEY,v);}catch(e){}}
+function setPromiseLocal(v){try{localStorage.setItem(PKEY,v);}catch(e){}}
+function setPromiseVal(v){setPromiseLocal(v);store._enq('profile','promise');store.flush();}
 const FACES={normal:'kotei-normal.png',care:'kotei-care.png',cheer:'kotei-cheer.png',body:'kotei-body.png'};
 function faceClone(kind){const img=document.createElement('img');img.src=FACES[kind]||FACES.normal;img.alt='コウテイちゃん';return img;}
 function mountFaces(){document.querySelectorAll('[data-kotei]').forEach(s=>{if(!s.hasChildNodes())s.appendChild(faceClone(s.dataset.kotei));});}
@@ -469,6 +496,7 @@ mountFaces();
   const {data:{session}}=await sb.auth.getSession();
   if(session){enterApp();}else{renderAuth();}
 })();
+window.addEventListener('online',()=>store.flush());
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
 </script>
 </body>
