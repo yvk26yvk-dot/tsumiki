@@ -54,9 +54,9 @@
   .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
   .tags button{padding:9px 15px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);font-family:inherit;font-size:14px;color:var(--ink-soft);cursor:pointer;transition:all .16s;}
   .tags button.on{border-color:var(--rose);background:var(--rose-soft);color:var(--rose-deep);font-weight:600;}
-  textarea,input[type=text]{width:100%;font-family:inherit;font-size:15px;line-height:1.7;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:13px 15px;outline:none;transition:border-color .16s;}
+  textarea,input[type=text],input[type=email],input[type=password]{width:100%;font-family:inherit;font-size:15px;line-height:1.7;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:13px 15px;outline:none;transition:border-color .16s;}
   textarea{resize:vertical;min-height:82px;}
-  textarea:focus,input[type=text]:focus{border-color:var(--rose);}
+  textarea:focus,input[type=text]:focus,input[type=email]:focus,input[type=password]:focus{border-color:var(--rose);}
   textarea::placeholder,input::placeholder{color:var(--ink-faint);}
   .field-label{font-size:12.5px;color:var(--ink-soft);margin:2px 0 7px;font-weight:600;}
   .deck-nav{display:flex;gap:10px;margin-top:18px;}
@@ -108,9 +108,14 @@
   .rec-month{font-size:14px;font-weight:700;color:var(--ink);margin:20px 0 10px;letter-spacing:.03em;}
   .promise-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--leaf-soft);border:1.5px solid var(--leaf);border-radius:var(--radius-sm);padding:13px 15px;font-size:15px;font-weight:600;color:var(--leaf-deep);}
   .promise-card button{background:none;border:none;font-family:inherit;font-size:12.5px;color:var(--ink-faint);cursor:pointer;text-decoration:underline;padding:2px;}
+  body.noauth nav{display:none;}
+  body.noauth .view:not(#view-auth){display:none!important;}
+  .linklike{background:none;border:none;font-family:inherit;font-size:13px;color:var(--ink-faint);text-decoration:underline;cursor:pointer;padding:2px;}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,16px);background:var(--ink);color:#fff;font-size:13.5px;line-height:1.5;padding:11px 18px;border-radius:999px;opacity:0;transition:all .35s;z-index:20;max-width:88%;text-align:center;}
+  .toast.show{opacity:.95;transform:translate(-50%,0);}
 </style>
 </head>
-<body>
+<body class="noauth">
 <div class="app">
   <header>
     <span class="kotei" data-kotei="body"></span>
@@ -120,6 +125,7 @@
   <section id="view-daily" class="view active"></section>
   <section id="view-weekly" class="view"></section>
   <section id="view-record" class="view"></section>
+  <section id="view-auth" class="view"></section>
 </div>
 <nav>
   <button class="on" data-v="daily">
@@ -135,7 +141,11 @@
     <span>きろく</span>
   </button>
 </nav>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
+const SUPABASE_URL='https://zfntwysyrioqxznlhxhm.supabase.co';
+const SUPABASE_KEY='sb_publishable_OKH_JjMgl8814Xye_3QhwQ_q4JBxa1K';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const store = {
   DKEY:'kotei.daily.v1', WKEY:'kotei.weekly.v1',
   _r(k){ try{return JSON.parse(localStorage.getItem(k))||{};}catch(e){return {};} },
@@ -399,8 +409,64 @@ function switchView(view){
   window.scrollTo(0,0);
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
+
+/* ===== 認証 ===== */
+let authMode='login';
+function renderAuth(notice){
+  document.body.classList.add('noauth');
+  document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
+  const v=document.getElementById('view-auth');
+  v.classList.add('active');
+  const isUp=authMode==='signup';
+  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'
+    +(isUp?'はじめまして。あなたの記録、わたしが大事に預かるね。':'おかえり。あなたの記録、ここで待ってるよ。')
+    +'</div></div></div>'
+    +'<div class="deck" style="min-height:auto"><div class="slide">'
+    +(notice?'<p class="sub" style="color:var(--rose-deep);margin:0 0 14px">'+esc(notice)+'</p>':'')
+    +'<div class="field-label">メールアドレス</div><input type="email" id="auth-email" autocomplete="email">'
+    +'<div class="field-label" style="margin-top:12px">パスワード</div><input type="password" id="auth-pw" autocomplete="'+(isUp?'new-password':'current-password')+'">'
+    +'</div><div class="deck-nav"><button class="btn primary" id="auth-go">'+(isUp?'はじめる':'ログイン')+'</button></div>'
+    +'<p style="text-align:center;margin:14px 0 0"><button class="linklike" id="auth-toggle">'+(isUp?'アカウントがある人はこちら':'はじめての人はこちら')+'</button></p></div>';
+  mountFaces();
+  document.getElementById('auth-toggle').onclick=()=>{authMode=isUp?'login':'signup';renderAuth();};
+  document.getElementById('auth-go').onclick=doAuth;
+  document.getElementById('auth-pw').onkeydown=e=>{if(e.key==='Enter')doAuth();};
+}
+function authErrMsg(err){
+  const m=(err&&err.message)||'';
+  if(m.includes('Invalid login credentials'))return 'メールかパスワードが違うみたい。もう一度みてくれる?';
+  if(m.includes('already registered'))return 'そのメールはもう登録されてるよ。ログインしてみてね。';
+  if(m.includes('at least 6'))return 'パスワードは6文字以上にしてね。';
+  if(m.includes('valid email'))return 'メールアドレスの形が違うみたい。';
+  return 'うまくいかなかったみたい。すこし待ってもう一度ためしてみてね。('+m+')';
+}
+async function doAuth(){
+  const email=document.getElementById('auth-email').value.trim();
+  const pw=document.getElementById('auth-pw').value;
+  if(!email||!pw){renderAuth('メールとパスワード、両方入れてね。');document.getElementById('auth-email').value=email;return;}
+  const btn=document.getElementById('auth-go');btn.disabled=true;btn.textContent='ちょっと待ってね…';
+  const res=authMode==='signup'
+    ?await sb.auth.signUp({email,password:pw})
+    :await sb.auth.signInWithPassword({email,password:pw});
+  if(res.error){renderAuth(authErrMsg(res.error));document.getElementById('auth-email').value=email;return;}
+  if(authMode==='signup'&&!res.data.session){
+    authMode='login';
+    renderAuth('確認メールを送ったよ。メールの中のリンクを押してから、ここでログインしてね。');
+    document.getElementById('auth-email').value=email;
+    return;
+  }
+  enterApp();
+}
+async function enterApp(){
+  document.body.classList.remove('noauth');
+  switchView('daily');
+}
+
 mountFaces();
-renderDaily();
+(async()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){enterApp();}else{renderAuth();}
+})();
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
 </script>
 </body>
