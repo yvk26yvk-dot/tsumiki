@@ -1,4 +1,4 @@
-const CACHE = 'kotei-v3';
+const CACHE = 'kotei-v4';
 const ASSETS = ['./index.html','./manifest.json','./kotei-normal.png','./kotei-care.png','./kotei-cheer.png','./kotei-body.png','./icon-192.png'];
 
 self.addEventListener('install', e => {
@@ -14,6 +14,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // Supabase(API/認証)はキャッシュしない。cache-firstに乗ると古いデータが返り続ける
+  if (new URL(e.request.url).hostname.endsWith('.supabase.co')) return;
   const isHTML = e.request.mode === 'navigate' || (e.request.headers.get('accept')||'').includes('text/html');
   if (isHTML) {
     // network-first: 更新がすぐ届く。オフライン時のみキャッシュ
