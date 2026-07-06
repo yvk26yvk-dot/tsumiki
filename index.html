@@ -444,12 +444,14 @@ async function doAuth(){
   const email=document.getElementById('auth-email').value.trim();
   const pw=document.getElementById('auth-pw').value;
   if(!email||!pw){renderAuth('メールとパスワード、両方入れてね。');document.getElementById('auth-email').value=email;return;}
+  const mode=authMode;
   const btn=document.getElementById('auth-go');btn.disabled=true;btn.textContent='ちょっと待ってね…';
-  const res=authMode==='signup'
+  const tg=document.getElementById('auth-toggle');if(tg)tg.disabled=true;
+  const res=mode==='signup'
     ?await sb.auth.signUp({email,password:pw})
     :await sb.auth.signInWithPassword({email,password:pw});
   if(res.error){renderAuth(authErrMsg(res.error));document.getElementById('auth-email').value=email;return;}
-  if(authMode==='signup'&&!res.data.session){
+  if(mode==='signup'&&!res.data.session){
     authMode='login';
     renderAuth('確認メールを送ったよ。メールの中のリンクを押してから、ここでログインしてね。');
     document.getElementById('auth-email').value=email;
