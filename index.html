@@ -486,9 +486,64 @@ async function doAuth(){
   }
   enterApp();
 }
+function toast(msg){
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),400);},4500);
+}
+/* 起動時同期: クラウド→ローカルにプル。未送信キーはローカル優先。
+   ローカルだけにあるキーはキューへ(初回移行もオフライン復帰もこの1規則) */
+async function bootSync(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session) return false;
+  const uid=session.user.id;
+  let changed=false, toMigrate=0;
+  try{
+    const [dRes,wRes,pRes]=await Promise.all([
+      sb.from('daily').select('date_key,entry'),
+      sb.from('weekly').select('week_key,entry'),
+      sb.from('profiles').select('promise').eq('id',uid).maybeSingle()
+    ]);
+    const q=store._r(store.OKEY);
+    const merge=(res,storageKey,keyCol,type)=>{
+      if(res.error) return;
+      const local=store._r(storageKey), cloud={};
+      (res.data||[]).forEach(r=>{cloud[r[keyCol]]=r.entry;});
+      Object.keys(cloud).forEach(k=>{
+        if(!q[type+'|'+k] && JSON.stringify(local[k])!==JSON.stringify(cloud[k])){local[k]=cloud[k];changed=true;}
+      });
+      Object.keys(local).forEach(k=>{
+        if(!cloud[k] && !q[type+'|'+k]){store._enq(type,k);toMigrate++;}
+      });
+      store._w(storageKey,local);
+    };
+    merge(dRes,store.DKEY,'date_key','daily');
+    merge(wRes,store.WKEY,'week_key','weekly');
+    if(!pRes.error && !q['profile|promise']){
+      const cp=(pRes.data&&pRes.data.promise)||'';
+      if(cp && cp!==getPromise()){setPromiseLocal(cp);changed=true;}
+      else if(!cp && getPromise()){store._enq('profile','promise');toMigrate++;}
+    }
+    if(toMigrate>0){
+      await store.flush();
+      if(!localStorage.getItem('kotei.migrated.v1') && Object.keys(store._r(store.OKEY)).length===0){
+        localStorage.setItem('kotei.migrated.v1','1');
+        toast('これまでの記録、クラウドでちゃんと預かったよ');
+      }
+    } else {
+      store.flush();
+    }
+  }catch(e){ /* オフライン起動: ローカルキャッシュのまま使える */ }
+  return changed;
+}
 async function enterApp(){
   document.body.classList.remove('noauth');
-  switchView('daily');
+  switchView('daily');            /* まずローカルキャッシュで即表示 */
+  const changed=await bootSync(); /* 裏でプル */
+  const cur=document.querySelector('.view.active');
+  /* プルで変わったときだけ再描画。入力途中(スライド操作中)は邪魔しない */
+  if(changed && cur && cur.id==='view-daily' && Object.keys(dstate).length===0) renderDaily();
 }
 
 mountFaces();
