@@ -480,6 +480,25 @@ async function doLogout(){
   KOTEI_KEYS.forEach(k=>localStorage.removeItem(k));
   location.reload();
 }
+function renderDeleteConfirm(err){
+  const v=document.getElementById('view-settings');
+  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei="care"></span><div class="msg"><div class="name">コウテイちゃん</div>アカウントを消すと、いままでの記録はぜんぶ消えて、元に戻せないよ。それでもいいか、ゆっくり考えてね。</div></div></div>'
+    +(err?'<p style="color:var(--rose-deep);font-size:13.5px;text-align:center;margin:12px 0 0">'+esc(err)+'</p>':'')
+    +'<div class="deck-nav" style="margin-top:18px"><button class="btn primary" id="del-cancel" style="flex:2">やめておく</button><button class="btn ghost" id="del-go" style="flex:1">削除にすすむ</button></div>';
+  mountFaces();
+  document.getElementById('del-cancel').onclick=()=>{delMode=false;renderSettings();};
+  document.getElementById('del-go').onclick=doDeleteAccount;
+}
+async function doDeleteAccount(){
+  if(!confirm('ほんとうに削除する? 記録はすべて消えて、元に戻せないよ。')) return;
+  const btn=document.getElementById('del-go');btn.disabled=true;
+  const {error}=await sb.rpc('delete_user');
+  if(error){renderDeleteConfirm('いまは削除できないみたい。電波のあるところで、もう一度ためしてみてね。');return;}
+  await sb.auth.signOut({scope:'local'}).catch(()=>{});
+  KOTEI_KEYS.forEach(k=>localStorage.removeItem(k));
+  toast('ここまで一緒に歩いてくれてありがとう。またいつでも、待ってるね');
+  setTimeout(()=>location.reload(),2500);
+}
 
 /* ===== 認証 ===== */
 let authMode='login';
