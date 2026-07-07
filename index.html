@@ -493,7 +493,7 @@ async function doDeleteAccount(){
   if(!confirm('ほんとうに削除する? 記録はすべて消えて、元に戻せないよ。')) return;
   const btn=document.getElementById('del-go');btn.disabled=true;
   const {error}=await sb.rpc('delete_user');
-  if(error){renderDeleteConfirm('いまは削除できないみたい。電波のあるところで、もう一度ためしてみてね。');return;}
+  if(error){if(delMode)renderDeleteConfirm('いまは削除できないみたい。電波のあるところで、もう一度ためしてみてね。');return;}
   await sb.auth.signOut({scope:'local'}).catch(()=>{});
   KOTEI_KEYS.forEach(k=>localStorage.removeItem(k));
   toast('ここまで一緒に歩いてくれてありがとう。またいつでも、待ってるね');
