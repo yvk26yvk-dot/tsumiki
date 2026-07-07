@@ -1,4 +1,4 @@
-const CACHE = 'kotei-v4';
+const CACHE = 'kotei-v5';
 const ASSETS = ['./index.html','./manifest.json','./kotei-normal.png','./kotei-care.png','./kotei-cheer.png','./kotei-body.png','./icon-192.png','./supabase.min.js'];
 
 self.addEventListener('install', e => {
