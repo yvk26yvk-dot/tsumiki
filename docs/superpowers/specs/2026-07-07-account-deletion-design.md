@@ -48,6 +48,8 @@ grant execute on function public.delete_user() to authenticated;
 - ヘッダー右上に歯車アイコンの小ボタンを追加(既存navの3タブは不変)。
   タップで `view-settings` を表示。設定画面には「もどる」ボタンがあり
   「きょう」タブ(`switchView('daily')`)へ戻る。
+- **歯車アイコンはログイン後のみ表示**。未ログイン(view-auth表示中)は非表示にする
+  (既存の `body.noauth` クラスを利用: `body.noauth .header-gear{display:none}`)。
 - 項目は配列駆動:
   ```js
   const SETTINGS_ITEMS=[
@@ -94,7 +96,8 @@ grant execute on function public.delete_user() to authenticated;
 
 ローカルサーバー+テストアカウント(`yvk26.yvk+del@gmail.com` 等)で:
 
-1. 歯車 → 設定画面が開き、「もどる」で戻れる
+1. 歯車 → 設定画面が開き、「もどる」で戻れる。**ログアウト状態(ログイン画面)では
+   歯車アイコンが表示されない**こと
 2. 設定画面からログアウトできる(未送信警告も従来どおり)。きろく最下部にリンクがないこと
 3. テストアカウントで記録を数件保存 → 削除フロー実行 → ログイン画面に戻る
 4. Dashboard確認: auth.users から該当ユーザーが消え、daily/weekly/profiles の行もcascade削除
