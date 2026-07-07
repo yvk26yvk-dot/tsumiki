@@ -158,7 +158,7 @@
 const SUPABASE_URL='https://zfntwysyrioqxznlhxhm.supabase.co';
 const SUPABASE_KEY='sb_publishable_OKH_JjMgl8814Xye_3QhwQ_q4JBxa1K';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const KOTEI_KEYS=['kotei.daily.v1','kotei.weekly.v1','kotei.promise.v1','kotei.outbox.v1','kotei.migrated.v1','kotei.migrating.v1'];
+const KOTEI_KEYS=['kotei.daily.v1','kotei.weekly.v1','kotei.promise.v1','kotei.outbox.v1','kotei.migrated.v1','kotei.migrating.v1','kotei.uid.v1'];
 const store = {
   DKEY:'kotei.daily.v1', WKEY:'kotei.weekly.v1', OKEY:'kotei.outbox.v1',
   _r(k){ try{return JSON.parse(localStorage.getItem(k))||{};}catch(e){return {};} },
@@ -607,6 +607,14 @@ async function bootSync(){
   return changed;
 }
 async function enterApp(){
+  /* ローカル記録の持ち主照合: 別アカウントでのログインなら、前の人の記録を
+     クラウドへ吸い上げない(削除済みアカウントの記録の復活も防ぐ) */
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){
+    const uid=session.user.id, owner=localStorage.getItem('kotei.uid.v1');
+    if(owner && owner!==uid) KOTEI_KEYS.forEach(k=>localStorage.removeItem(k));
+    localStorage.setItem('kotei.uid.v1',uid);
+  }
   document.body.classList.remove('noauth');
   switchView('daily');            /* まずローカルキャッシュで即表示 */
   const changed=await bootSync(); /* 裏でプル */
