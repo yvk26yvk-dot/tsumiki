@@ -107,6 +107,15 @@ grant execute on function public.delete_user() to authenticated;
    きろくページで太字にならず文字列として表示されること
 8. sw.jsのCACHEを `kotei-v5` に上げる(本番リリース済みv4からの更新のため)
 
+## 追補(最終レビューで追加・ユーザー承認済み)
+
+**ローカル記録の持ち主照合(uid照合)**: 削除やセッション失効の後に端末へ残った
+localStorageの記録が、次にログインした別アカウントのbootSync移行規則で
+吸い上げられるのを防ぐ。`kotei.uid.v1` にセッションuidを刻印し、enterApp冒頭
+(描画・bootSyncより前)で不一致なら KOTEI_KEYS を全クリアしてから刻印し直す。
+初回(刻印なし=owner null)はクリアしない — localStorage時代のデータを初回
+ログインで移行する正当経路を守るため。照合はセッションuidのみを使う。
+
 ## スコープ外
 
 - Sign in with Apple / パスワードリセット(Day 13-14・リリース要件) / 通知設定 / kotei層AI化
