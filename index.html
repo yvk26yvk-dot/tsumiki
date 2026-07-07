@@ -25,7 +25,7 @@
   .kotei{display:inline-block;line-height:0;}
   .kotei svg{display:block;}
   .kotei img{display:block;width:100%;height:100%;object-fit:contain;}
-  header{padding:24px 0 4px;text-align:center;}
+  header{padding:24px 0 4px;text-align:center;position:relative;}
   header .kotei{width:64px;height:64px;margin-bottom:6px;}
   header h1{font-size:20px;font-weight:700;margin:0;letter-spacing:.04em;}
   header .tagline{font-size:12.5px;color:var(--ink-soft);margin:2px 0 0;}
@@ -113,6 +113,14 @@
   .linklike{background:none;border:none;font-family:inherit;font-size:13px;color:var(--ink-faint);text-decoration:underline;cursor:pointer;padding:2px;}
   .toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,16px);background:var(--ink);color:#fff;font-size:13.5px;line-height:1.5;padding:11px 18px;border-radius:999px;opacity:0;transition:all .35s;z-index:20;max-width:88%;text-align:center;}
   .toast.show{opacity:.95;transform:translate(-50%,0);}
+  .header-gear{position:absolute;top:28px;right:2px;background:none;border:none;cursor:pointer;color:var(--ink-faint);padding:6px;line-height:0;}
+  .header-gear svg{width:21px;height:21px;}
+  body.noauth .header-gear{display:none;}
+  .settings-item{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);padding:15px 16px;margin-bottom:10px;cursor:pointer;}
+  .settings-item .lbl{font-weight:600;font-size:15px;}
+  .settings-item .sub{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .settings-item .chev{color:var(--ink-faint);font-size:18px;}
+  .linklike:disabled{opacity:.5;cursor:default;}
 </style>
 </head>
 <body class="noauth">
@@ -121,11 +129,15 @@
     <span class="kotei" data-kotei="body"></span>
     <h1>コウテイちゃん</h1>
     <p class="tagline">今日のあなたを、ぎゅっと抱きしめる</p>
+    <button id="header-gear" class="header-gear" aria-label="設定">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
   </header>
   <section id="view-daily" class="view active"></section>
   <section id="view-weekly" class="view"></section>
   <section id="view-record" class="view"></section>
   <section id="view-auth" class="view"></section>
+  <section id="view-settings" class="view"></section>
 </div>
 <nav>
   <button class="on" data-v="daily">
@@ -146,6 +158,7 @@
 const SUPABASE_URL='https://zfntwysyrioqxznlhxhm.supabase.co';
 const SUPABASE_KEY='sb_publishable_OKH_JjMgl8814Xye_3QhwQ_q4JBxa1K';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const KOTEI_KEYS=['kotei.daily.v1','kotei.weekly.v1','kotei.promise.v1','kotei.outbox.v1','kotei.migrated.v1','kotei.migrating.v1'];
 const store = {
   DKEY:'kotei.daily.v1', WKEY:'kotei.weekly.v1', OKEY:'kotei.outbox.v1',
   _r(k){ try{return JSON.parse(localStorage.getItem(k))||{};}catch(e){return {};} },
@@ -371,11 +384,10 @@ function renderRecord(){
   const dates=Object.keys(all).sort().reverse();
   const weeks=store._r(store.WKEY);
   let html='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>あなたが歩いてきた道だよ。ゆっくり、ながめてね。</div></div></div>';
-  const logoutHtml='<div style="text-align:center;margin:30px 0 6px"><button class="linklike" id="logout">ログアウト</button></div>';
 
   if(dates.length===0 && Object.keys(weeks).length===0){
-    html+='<div class="empty"><span class="kotei" data-kotei="care"></span>まだ記録がないよ。<br>きょうのタブから、はじめてみよう。</div>'+logoutHtml;
-    v.innerHTML=html; mountFaces(); wireLogout(); return;
+    html+='<div class="empty"><span class="kotei" data-kotei="care"></span>まだ記録がないよ。<br>きょうのタブから、はじめてみよう。</div>';
+    v.innerHTML=html; mountFaces(); return;
   }
 
   /* フィルタチップ */
@@ -423,23 +435,8 @@ function renderRecord(){
     if(weekHtml){html+='<div class="section-label">週次のきろく</div>'+weekHtml;}
   }
 
-  html+=logoutHtml;
   v.innerHTML=html; mountFaces();
   document.querySelectorAll('[data-rf]').forEach(b=>{b.onclick=()=>{recFilter=b.dataset.rf;renderRecord();};});
-  wireLogout();
-}
-
-function wireLogout(){
-  const lo=document.getElementById('logout');
-  if(!lo) return;
-  lo.onclick=async()=>{
-    const pending=Object.keys(store._r(store.OKEY)).length;
-    if(pending>0 && !confirm('まだクラウドに送れていない記録が'+pending+'件あるよ。ログアウトすると、この端末からは消えちゃう。それでもログアウトする?')) return;
-    if(pending===0 && !confirm('ログアウトする? 記録はクラウドにちゃんと残ってるから、安心してね。')) return;
-    await sb.auth.signOut();
-    ['kotei.daily.v1','kotei.weekly.v1','kotei.promise.v1','kotei.outbox.v1','kotei.migrated.v1'].forEach(k=>localStorage.removeItem(k));
-    location.reload();
-  };
 }
 
 function switchView(view){
@@ -449,9 +446,40 @@ function switchView(view){
   if(view==='daily'){dstate={};didx=0;renderDaily();}
   if(view==='weekly'){wstate={};renderWeekly();}
   if(view==='record'){renderRecord();}
+  if(view==='settings'){delMode=false;renderSettings();}
   window.scrollTo(0,0);
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
+document.getElementById('header-gear').onclick=()=>switchView('settings');
+
+/* ===== 設定 ===== */
+const SETTINGS_ITEMS=[
+  {id:'logout', label:'ログアウト', sub:'記録はクラウドにちゃんと残るよ', fn:doLogout}
+  /* Capacitor化で通知設定などをここに追加 */
+];
+let delMode=false;
+function renderSettings(){
+  const v=document.getElementById('view-settings');
+  if(delMode){renderDeleteConfirm();return;}
+  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>設定だよ。ゆっくりどうぞ。</div></div></div>'
+    +'<div style="margin-top:10px">'
+    +SETTINGS_ITEMS.map(it=>'<div class="settings-item" data-set="'+it.id+'"><div><div class="lbl">'+it.label+'</div>'+(it.sub?'<div class="sub">'+it.sub+'</div>':'')+'</div><span class="chev">›</span></div>').join('')
+    +'</div>'
+    +'<div class="deck-nav" style="margin-top:18px"><button class="btn ghost" id="settings-back" style="flex:1">もどる</button></div>'
+    +'<p style="text-align:center;margin:28px 0 0"><button class="linklike" id="open-delete">アカウントの削除について</button></p>';
+  mountFaces();
+  document.getElementById('settings-back').onclick=()=>switchView('daily');
+  document.querySelectorAll('[data-set]').forEach(el=>{el.onclick=()=>{const it=SETTINGS_ITEMS.find(x=>x.id===el.dataset.set);if(it)it.fn();};});
+  document.getElementById('open-delete').onclick=()=>{delMode=true;renderSettings();};
+}
+async function doLogout(){
+  const pending=Object.keys(store._r(store.OKEY)).length;
+  if(pending>0 && !confirm('まだクラウドに送れていない記録が'+pending+'件あるよ。ログアウトすると、この端末からは消えちゃう。それでもログアウトする?')) return;
+  if(pending===0 && !confirm('ログアウトする? 記録はクラウドにちゃんと残ってるから、安心してね。')) return;
+  await sb.auth.signOut({scope:'local'});
+  KOTEI_KEYS.forEach(k=>localStorage.removeItem(k));
+  location.reload();
+}
 
 /* ===== 認証 ===== */
 let authMode='login';
