@@ -2,3 +2,9 @@
 .env
 .env.*
 node_modules/
+
+# Capacitor / ネイティブ生成物
+www/
+ios/App/Pods/
+ios/App/output/
+ios/DerivedData/

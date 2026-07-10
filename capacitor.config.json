@@ -1,0 +1,8 @@
+{
+  "appId": "com.kouteichan.app",
+  "appName": "コウテイちゃん",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
