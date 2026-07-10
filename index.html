@@ -507,22 +507,34 @@ function renderAuth(notice){
   document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
   const v=document.getElementById('view-auth');
   v.classList.add('active');
-  const isUp=authMode==='signup';
-  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'
-    +(isUp?'はじめまして。あなたの記録、わたしが大事に預かるね。':'おかえり。あなたの記録、ここで待ってるよ。')
-    +'</div></div></div>'
+  const m=authMode;
+  const GREET={
+    login:'おかえり。あなたの記録、ここで待ってるよ。',
+    signup:'はじめまして。あなたの記録、わたしが大事に預かるね。',
+    forgot:'だいじょうぶ、いっしょに入り直そう。メールアドレスを教えてね。',
+    recovery:'おかえり。あたらしいパスワードを決めよう。'
+  };
+  const BTN={login:'ログイン',signup:'はじめる',forgot:'リセットメールを送る',recovery:'これにする'};
+  const showEmail=(m!=='recovery');
+  const showPw=(m!=='forgot');
+  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'+GREET[m]+'</div></div></div>'
     +'<div class="deck" style="min-height:auto"><div class="slide">'
     +(notice?'<p class="sub" style="color:var(--rose-deep);margin:0 0 14px">'+esc(notice)+'</p>':'')
-    +'<div class="field-label">メールアドレス</div><input type="email" id="auth-email" autocomplete="email">'
-    +'<div class="field-label" style="margin-top:12px">パスワード</div><input type="password" id="auth-pw" autocomplete="'+(isUp?'new-password':'current-password')+'">'
-    +'</div><div class="deck-nav"><button class="btn primary" id="auth-go">'+(isUp?'はじめる':'ログイン')+'</button></div>'
-    +'<p style="text-align:center;margin:14px 0 0"><button class="linklike" id="auth-toggle">'+(isUp?'アカウントがある人はこちら':'はじめての人はこちら')+'</button></p></div>';
+    +(showEmail?'<div class="field-label">メールアドレス</div><input type="email" id="auth-email" autocomplete="email">':'')
+    +(showPw?'<div class="field-label"'+(showEmail?' style="margin-top:12px"':'')+'>'+(m==='recovery'?'あたらしいパスワード':'パスワード')+'</div><input type="password" id="auth-pw" autocomplete="'+(m==='login'?'current-password':'new-password')+'">':'')
+    +'</div><div class="deck-nav"><button class="btn primary" id="auth-go">'+BTN[m]+'</button></div>'
+    +(m==='login'?'<p style="text-align:center;margin:14px 0 0"><button class="linklike" id="auth-forgot">パスワードを忘れた?</button></p>':'')
+    +(m!=='recovery'?'<p style="text-align:center;margin:'+(m==='login'?'8px':'14px')+' 0 0"><button class="linklike" id="auth-toggle">'+(m==='signup'?'アカウントがある人はこちら':(m==='forgot'?'ログインにもどる':'はじめての人はこちら'))+'</button></p>':'')
+    +'</div>';
   mountFaces();
-  document.getElementById('auth-toggle').onclick=()=>{authMode=isUp?'login':'signup';renderAuth();};
+  const tg=document.getElementById('auth-toggle');
+  if(tg)tg.onclick=()=>{authMode=(m==='signup'||m==='forgot')?'login':'signup';renderAuth();};
+  const fg=document.getElementById('auth-forgot');
+  if(fg)fg.onclick=()=>{authMode='forgot';renderAuth();};
   document.getElementById('auth-go').onclick=doAuth;
   const authEnter=e=>{if(e.key==='Enter'&&!document.getElementById('auth-go').disabled)doAuth();};
-  document.getElementById('auth-email').onkeydown=authEnter;
-  document.getElementById('auth-pw').onkeydown=authEnter;
+  const em=document.getElementById('auth-email');if(em)em.onkeydown=authEnter;
+  const pw=document.getElementById('auth-pw');if(pw)pw.onkeydown=authEnter;
 }
 function authErrMsg(err){
   const m=(err&&err.message)||'';
@@ -533,22 +545,38 @@ function authErrMsg(err){
   return 'うまくいかなかったみたい。すこし待ってもう一度ためしてみてね。('+m+')';
 }
 async function doAuth(){
-  const email=document.getElementById('auth-email').value.trim();
-  const pw=document.getElementById('auth-pw').value;
-  if(!email||!pw){renderAuth('メールとパスワード、両方入れてね。');document.getElementById('auth-email').value=email;return;}
   const mode=authMode;
+  const emEl=document.getElementById('auth-email'), pwEl=document.getElementById('auth-pw');
+  const email=emEl?emEl.value.trim():'';
+  const pw=pwEl?pwEl.value:'';
+  if((mode==='login'||mode==='signup')&&(!email||!pw)){renderAuth('メールとパスワード、両方入れてね。');document.getElementById('auth-email').value=email;return;}
+  if(mode==='forgot'&&!email){renderAuth('メールアドレスを入れてね。');return;}
+  if(mode==='recovery'&&!pw){renderAuth('あたらしいパスワードを入れてね。');return;}
   const btn=document.getElementById('auth-go');btn.disabled=true;btn.textContent='ちょっと待ってね…';
-  const tg=document.getElementById('auth-toggle');if(tg)tg.disabled=true;
-  const res=mode==='signup'
-    ?await sb.auth.signUp({email,password:pw})
-    :await sb.auth.signInWithPassword({email,password:pw});
-  if(res.error){renderAuth(authErrMsg(res.error));document.getElementById('auth-email').value=email;return;}
+  ['auth-toggle','auth-forgot'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true;});
+  let res;
+  if(mode==='signup')res=await sb.auth.signUp({email,password:pw});
+  else if(mode==='login')res=await sb.auth.signInWithPassword({email,password:pw});
+  else if(mode==='forgot')res=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  else res=await sb.auth.updateUser({password:pw});
+  if(res.error){
+    renderAuth(mode==='forgot'?'すこし時間をおいて、もう一度ためしてみてね。':authErrMsg(res.error));
+    const em2=document.getElementById('auth-email');if(em2)em2.value=email;
+    return;
+  }
+  if(mode==='forgot'){
+    authMode='login';
+    renderAuth('メールを送ったよ。届いたリンクから、新しいパスワードを決めてね。');
+    document.getElementById('auth-email').value=email;
+    return;
+  }
   if(mode==='signup'&&!res.data.session){
     authMode='login';
     renderAuth('確認メールを送ったよ。メールの中のリンクを押してから、ここでログインしてね。');
     document.getElementById('auth-email').value=email;
     return;
   }
+  if(mode==='recovery'){authMode='login';toast('あたらしいパスワード、うけとったよ');}
   enterApp();
 }
 function toast(msg){
@@ -624,7 +652,13 @@ async function enterApp(){
 }
 
 mountFaces();
+/* リカバリリンクで戻ってきたら、新しいパスワード画面へ */
+sb.auth.onAuthStateChange((event)=>{
+  if(event==='PASSWORD_RECOVERY'){authMode='recovery';renderAuth();}
+});
 (async()=>{
+  /* リカバリ着地時はアプリを開かず、上のイベントに任せる(画面のちらつき防止) */
+  if(location.hash.includes('type=recovery'))return;
   const {data:{session}}=await sb.auth.getSession();
   if(session){enterApp();}else{renderAuth();}
 })();
