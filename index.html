@@ -155,6 +155,7 @@
 </nav>
 <script src="supabase.min.js"></script>
 <script>
+const NATIVE=location.protocol==='capacitor:';
 const SUPABASE_URL='https://zfntwysyrioqxznlhxhm.supabase.co';
 const SUPABASE_KEY='sb_publishable_OKH_JjMgl8814Xye_3QhwQ_q4JBxa1K';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -558,7 +559,9 @@ async function doAuth(){
   let res;
   if(mode==='signup')res=await sb.auth.signUp({email,password:pw});
   else if(mode==='login')res=await sb.auth.signInWithPassword({email,password:pw});
-  else if(mode==='forgot')res=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname.replace(/index\.html$/,'')});
+  /* ネイティブ: capacitor://はメールリンクの戻り先にできないため本番PWAへ。
+     Safariで再設定→アプリに戻って新パスワードでログインする流れ */
+  else if(mode==='forgot')res=await sb.auth.resetPasswordForEmail(email,{redirectTo:NATIVE?'https://yvk26yvk-dot.github.io/tsumiki/':location.origin+location.pathname.replace(/index\.html$/,'')});
   else res=await sb.auth.updateUser({password:pw});
   if(res.error){
     let msg;
@@ -685,7 +688,7 @@ sb.auth.onAuthStateChange((event)=>{
   if(session){enterApp();}else{renderAuth();}
 })();
 window.addEventListener('online',()=>store.flush());
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+if('serviceWorker' in navigator && !NATIVE){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
 </script>
 </body>
 </html>
