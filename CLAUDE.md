@@ -59,3 +59,8 @@ index.html 内に、意図的に隔離された2つの層がある。**この隔
   できない(独自SMTPまたはProが必要)ため、**デフォルトの英語文面のまま**。
   App Store提出前に独自SMTP(Resend等)を導入し、日英併記化とあわせて実施する。
   文面案は docs/superpowers/plans/2026-07-10-password-reset.md のTask 3に保存済み。
+
+※将来 app.kouteichan.com へ移すときの更新箇所: index.html内の**NATIVE分岐の
+  本番URL固定値**(パスワードリセットのredirectTo)、SupabaseのSite URL /
+  Redirect URLs、manifest/OGP類。GitHub PagesのURLをハードコードしている箇所を
+  `grep "yvk26yvk-dot.github.io"` で洗い出して一括更新すること。
