@@ -54,3 +54,8 @@ index.html 内に、意図的に隔離された2つの層がある。**この隔
 4. Capacitor で iOS 化 → プッシュ通知
 5. IAP(RevenueCat) + AIコウテイちゃん(kotei層のAPI化)
 6. App Store 提出
+
+※認証メール(パスワードリセット/確認)は、Supabase無料構成ではテンプレート編集が
+  できない(独自SMTPまたはProが必要)ため、**デフォルトの英語文面のまま**。
+  App Store提出前に独自SMTP(Resend等)を導入し、日英併記化とあわせて実施する。
+  文面案は docs/superpowers/plans/2026-07-10-password-reset.md のTask 3に保存済み。
