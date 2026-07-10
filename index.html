@@ -542,6 +542,7 @@ function authErrMsg(err){
   if(m.includes('already registered'))return 'そのメールはもう登録されてるよ。ログインしてみてね。';
   if(m.includes('at least 6'))return 'パスワードは6文字以上にしてね。';
   if(m.includes('invalid format')||m.includes('valid email'))return 'メールアドレスの形が違うみたい。';
+  if(m.includes('different from the old'))return 'まえと同じパスワードみたい。あたらしいのを決めてね。';
   return 'うまくいかなかったみたい。すこし待ってもう一度ためしてみてね。('+m+')';
 }
 async function doAuth(){
@@ -557,10 +558,15 @@ async function doAuth(){
   let res;
   if(mode==='signup')res=await sb.auth.signUp({email,password:pw});
   else if(mode==='login')res=await sb.auth.signInWithPassword({email,password:pw});
-  else if(mode==='forgot')res=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  else if(mode==='forgot')res=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname.replace(/index\.html$/,'')});
   else res=await sb.auth.updateUser({password:pw});
   if(res.error){
-    renderAuth(mode==='forgot'?'すこし時間をおいて、もう一度ためしてみてね。':authErrMsg(res.error));
+    let msg;
+    if(mode==='forgot'){
+      const em3=(res.error.message||'');
+      msg=(em3.includes('invalid format')||em3.includes('valid email'))?'メールアドレスの形が違うみたい。':'すこし時間をおいて、もう一度ためしてみてね。';
+    }else{msg=authErrMsg(res.error);}
+    renderAuth(msg);
     const em2=document.getElementById('auth-email');if(em2)em2.value=email;
     return;
   }
@@ -657,8 +663,24 @@ sb.auth.onAuthStateChange((event)=>{
   if(event==='PASSWORD_RECOVERY'){authMode='recovery';renderAuth();}
 });
 (async()=>{
-  /* リカバリ着地時はアプリを開かず、上のイベントに任せる(画面のちらつき防止) */
-  if(location.hash.includes('type=recovery'))return;
+  /* リカバリ着地: PASSWORD_RECOVERYイベントがrecovery画面を出す。
+     万一イベントが来なければ(壊れたリンク等)3秒後に通常bootへフォールバック */
+  if(location.hash.includes('access_token')&&location.hash.includes('type=recovery')){
+    setTimeout(async()=>{
+      const cur=document.querySelector('.view.active');
+      if(!cur||!cur.innerHTML.trim()){
+        const {data:{session}}=await sb.auth.getSession();
+        if(session){enterApp();}else{renderAuth();}
+      }
+    },3000);
+    return;
+  }
+  /* リセットリンクの期限切れ: 責めずに、もう一度送れる画面へ */
+  if(location.hash.includes('error_code=otp_expired')){
+    authMode='forgot';
+    renderAuth('リンクの期限が切れちゃったみたい。もう一度、リセットメールを送ろうね。');
+    return;
+  }
   const {data:{session}}=await sb.auth.getSession();
   if(session){enterApp();}else{renderAuth();}
 })();
