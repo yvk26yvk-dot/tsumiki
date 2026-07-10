@@ -18,7 +18,11 @@
   `.linklike` で「パスワードを忘れた?」を追加。タップで `authMode='forgot'`。
 - forgotモード: メール入力+「リセットメールを送る」ボタンのみ。
   「アカウントがある人はこちら」でloginに戻れる。
-- 送信: `sb.auth.resetPasswordForEmail(email, {redirectTo:'https://yvk26yvk-dot.github.io/tsumiki/'})`
+- 送信: `sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin+location.pathname})`
+  ※redirectToは動的に自分自身へ。本番固定にするとローカル検証でメールリンクが
+  本番に飛んでしまい検証できないため。ローカル/本番どちらで送っても
+  「送った環境の自分」に戻る。使用するオリジンはSupabaseのRedirect URLs
+  への登録が必要(セクション3)。
 - 成功時文言: 「メールを送ったよ。届いたリンクから、新しいパスワードを決めてね。」
   ※存在しないメールでもSupabaseは成功を返す仕様のため、この文言のままで
   メール列挙攻撃対策になる(登録有無を推測させない)。
@@ -40,7 +44,8 @@
 - Authentication → Sign In / Providers → Email → **Confirm email をON**
 - URL Configuration → Redirect URLs に本番URL
   `https://yvk26yvk-dot.github.io/tsumiki/` があることを確認、
-  ローカル検証用に `http://localhost:8080` を追加
+  ローカル検証用に `http://localhost:8080` と `http://127.0.0.1:8080` を追加
+  (redirectToが動的なため、検証で使うオリジンはすべて登録が必要)
 - 既知事項(スコープ外・メモ): Supabase内蔵メールは時間あたり数通の送信制限が
   ある。App Store公開前に独自SMTP(Resend等)への切り替えを検討する。
 
@@ -70,5 +75,5 @@ sw.jsのCACHEを `kotei-v6` へ上げる。
 ## スコープ外
 
 - Capacitor iOS化(次スペック。XcodeのDL完了後)
-- 独自SMTP / メールテンプレートの日本語化(公開前に別途)
+- 独自SMTP / 言語別の出し分け配信(公開前に別途。文面自体は本スペックで日英併記化する)
 - メールアドレス変更機能
