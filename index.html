@@ -350,12 +350,12 @@ function dateChipHtml(){
 }
 function wireDateChip(){
   const chip=document.getElementById('date-chip');
-  if(chip)chip.onclick=()=>{ if(!dpOpen){const d=new Date(activeDayKey+'T00:00:00');dpMonth={y:d.getFullYear(),m:d.getMonth()+1};} dpOpen=!dpOpen; renderDaily(); };
+  if(chip)chip.onclick=()=>{ if(!dpOpen){const d=new Date(activeDayKey+'T00:00:00');dpMonth={y:d.getFullYear(),m:d.getMonth()+1};} dpOpen=!dpOpen; if(document.getElementById('next'))captureSlide(DAILY_SLIDES[didx]); renderDaily(); };
   const bt=document.getElementById('back-today');
   if(bt)bt.onclick=()=>{activeDayKey=todayKey;dpOpen=false;dstate={};didx=0;renderDaily();};
   const pv=document.getElementById('dp-prev'), nx=document.getElementById('dp-next');
-  if(pv)pv.onclick=()=>{let{y,m}=dpMonth;m--;if(m<1){m=12;y--;}dpMonth={y,m};renderDaily();};
-  if(nx)nx.onclick=()=>{let{y,m}=dpMonth;m++;if(m>12){m=1;y++;}dpMonth={y,m};renderDaily();};
+  if(pv)pv.onclick=()=>{let{y,m}=dpMonth;m--;if(m<1){m=12;y--;}dpMonth={y,m};if(document.getElementById('next'))captureSlide(DAILY_SLIDES[didx]);renderDaily();};
+  if(nx)nx.onclick=()=>{let{y,m}=dpMonth;m++;if(m>12){m=1;y++;}dpMonth={y,m};if(document.getElementById('next'))captureSlide(DAILY_SLIDES[didx]);renderDaily();};
   document.querySelectorAll('#view-daily [data-cal-day]').forEach(c=>{c.onclick=()=>{activeDayKey=c.dataset.calDay;dpOpen=false;dstate={};didx=0;renderDaily();};});
 }
 function renderDaily(){
