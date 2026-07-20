@@ -155,7 +155,7 @@
   </button>
   <button data-v="weekly">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
-    <span>ふりかえり</span>
+    <span>こんしゅう</span>
   </button>
   <button data-v="record">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h13l3 3v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M7 8h8M7 12h8M7 16h5"/></svg>
@@ -289,7 +289,7 @@ function renderDaily(){
   const existing=store.getDaily(todayKey);
   if(existing && Object.keys(dstate).length===0){
     const fb=kotei.daily(existing);
-    v.innerHTML='<div class="speech warm"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'+fb.head+'</div></div></div><div class="deck"><div class="result"><span class="kotei" data-kotei="cheer"></span><h3>今日の記録、ぜんぶ受けとったよ</h3><p>'+fb.body+'</p><p class="hint">また明日も、待ってるね。</p></div><div class="deck-nav"><button class="btn ghost" id="edit-today">書き直す</button><button class="btn primary" id="go-weekly">ふりかえりを見る</button></div></div>';
+    v.innerHTML='<div class="speech warm"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'+fb.head+'</div></div></div><div class="deck"><div class="result"><span class="kotei" data-kotei="cheer"></span><h3>今日の記録、ぜんぶ受けとったよ</h3><p>'+fb.body+'</p><p class="hint">また明日も、待ってるね。</p></div><div class="deck-nav"><button class="btn ghost" id="edit-today">書き直す</button><button class="btn primary" id="go-weekly">こんしゅうを見る</button></div></div>';
     mountFaces();
     document.getElementById('edit-today').onclick=()=>{dstate={...existing};didx=0;renderDeck();};
     document.getElementById('go-weekly').onclick=()=>switchView('weekly');
