@@ -58,6 +58,10 @@ class MainViewController: CAPBridgeViewController {
         webView?.isOpaque = false
         webView?.backgroundColor = cream
         webView?.scrollView.backgroundColor = cream
+        // ページ枠(外側scrollView)は動かさない。長い画面のスクロールと端バウンスは
+        // 内側の .app(CSS overflow)が担当する。これで短い画面は1pxも動かず、
+        // 「ズレたまま止まる」状態が構造的に起きない。
+        webView?.scrollView.bounces = false
         if #available(iOS 15.0, *) {
             webView?.underPageBackgroundColor = cream
         }

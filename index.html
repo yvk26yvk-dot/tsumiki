@@ -22,10 +22,14 @@
   html,body{margin:0;padding:0;}
   html{background:var(--bg);}
   body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--ink);line-height:1.75;-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
-  /* ネイティブ(Capacitor): Dynamic Island/ノッチに隠れないよう上部余白を最低値つき保証。envが効けばenv採用。
-     オーバースクロールの弾力(ラバーバンド)はWeb版と同じに残す。端で露出する下地の色は
-     ネイティブ側(WKWebViewのunderPageBackgroundColor等)で生成りにする(AppDelegate.swift) */
+  /* ネイティブ(Capacitor): ページ(body/html)自体はスクロールさせず画面に固定し、内側の .app だけを
+     スクロールコンテナにする。これで「短い画面は1pxも動かない/長い画面はスクロール&端で戻る/
+     ページ全体がズレたまま止まることが起きない」を構造的に保証する。上部余白はセーフエリア分。
+     露出する下地の色はネイティブ側(underPageBackgroundColor)で生成りに(AppDelegate.swift)。
+     PWA(nativeクラスなし)は現状のbodyスクロールのまま無変更 */
+  html.native,body.native{height:100%;overflow:hidden;}
   body.native{padding-top:max(env(safe-area-inset-top),44px);}
+  body.native .app{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;}
   .app{max-width:480px;margin:0 auto;padding:0 18px 120px;}
   .kotei{display:inline-block;line-height:0;}
   .kotei svg{display:block;}
@@ -165,8 +169,15 @@ if(NATIVE){
   /* ネイティブのみ: セーフエリア余白のためのクラス+ピンチ/自動ズーム無効化。
      Web/PWA側はアクセシビリティのためviewportを変えない */
   document.body.classList.add('native');
+  document.documentElement.classList.add('native');
   const vp=document.querySelector('meta[name=viewport]');
   if(vp)vp.setAttribute('content','width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no');
+}
+/* ネイティブはbody固定・.appがスクロールコンテナなので、先頭スクロールは.appに向ける。
+   Web/PWAは従来どおりwindowをスクロール */
+function scrollTop(smooth){
+  const el=NATIVE?document.querySelector('.app'):window;
+  if(el)el.scrollTo({top:0,behavior:smooth?'smooth':'auto'});
 }
 const SUPABASE_URL='https://zfntwysyrioqxznlhxhm.supabase.co';
 const SUPABASE_KEY='sb_publishable_OKH_JjMgl8814Xye_3QhwQ_q4JBxa1K';
@@ -318,7 +329,7 @@ function finishDaily(){
   store.saveDaily(todayKey, clean);
   dstate={}; didx=0;
   renderDaily();
-  window.scrollTo({top:0,behavior:'smooth'});
+  scrollTop(true);
 }
 const PILLARS=['恋愛','仕事','友達','趣味','運動','旅行','勉強','家族'];
 const thisWeek=weekKey(new Date());
@@ -361,7 +372,7 @@ function renderWeekly(){
   v.innerHTML=html;
   mountFaces();
   const sw=document.getElementById('start-weekly');
-  if(sw)sw.onclick=()=>{wstate._filling=true;renderWeekly();window.scrollTo(0,0);};
+  if(sw)sw.onclick=()=>{wstate._filling=true;renderWeekly();scrollTop(false);};
 }
 function renderWeeklyForm(saved){
   const v=document.getElementById('view-weekly');
@@ -373,7 +384,7 @@ function renderWeeklyForm(saved){
   mountFaces();
   document.querySelectorAll('[data-pillar]').forEach(r=>{r.oninput=()=>document.getElementById('v-'+r.dataset.pillar).textContent=r.value;});
   document.getElementById('save-weekly').onclick=saveWeekly;
-  document.getElementById('cancel-weekly').onclick=()=>{wstate._filling=false;renderWeekly();window.scrollTo(0,0);};
+  document.getElementById('cancel-weekly').onclick=()=>{wstate._filling=false;renderWeekly();scrollTop(false);};
 }
 function saveWeekly(){
   const pillars={};
@@ -383,7 +394,7 @@ function saveWeekly(){
   store.saveWeekly(thisWeek,{pillars,pmemos,goods});
   wstate={_filling:false};
   renderWeekly();
-  window.scrollTo({top:0,behavior:'smooth'});
+  scrollTop(true);
 }
 /* =====================================================================
    RECORD — 過去の自由記述をすべて日付つきで一覧する「きろく」ページ。
@@ -460,7 +471,7 @@ function switchView(view){
   if(view==='weekly'){wstate={};renderWeekly();}
   if(view==='record'){renderRecord();}
   if(view==='settings'){delMode=false;renderSettings();}
-  window.scrollTo(0,0);
+  scrollTop(false);
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
 document.getElementById('header-gear').onclick=()=>switchView('settings');
