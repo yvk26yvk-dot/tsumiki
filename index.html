@@ -493,6 +493,9 @@ function saveWeekly(){
 const Q3_LABELS=['感情を受け止められた','まだ難しかった','ネガティブはなかった'];
 let recFilter='all';
 let recOpen=null;   /* 開いている月ラベルのSet。null=未初期化(初回に今月だけ開く) */
+let recView='list';                 /* きろくのビュー: list | calendar */
+let recCalMonth={y:0,m:0};          /* カレンダー表示中の年月(0=未初期化) */
+let recCalSel=null;                 /* カレンダーで選択中のdateKey */
 /* 1日ぶんのきろくカード。filterで項目を絞る。該当なしは''を返す */
 function dailyCardHtml(dateKey,e,filter){
   filter=filter||'all';
@@ -518,7 +521,44 @@ function weeklyCardHtml(wk,w){
   if(!parts.length) return '';
   return '<div class="rec-card"><div class="rec-date"><span class="rec-tag">週</span> '+label+'</div>'+parts.join('')+'</div>';
 }
-function renderRecord(){ renderRecordList(); }
+function segHtml(){
+  return '<div class="seg"><button data-seg="calendar" class="'+(recView==='calendar'?'on':'')+'">カレンダー</button><button data-seg="list" class="'+(recView==='list'?'on':'')+'">リスト</button></div>';
+}
+function wireSeg(){
+  document.querySelectorAll('[data-seg]').forEach(b=>{b.onclick=()=>{recView=b.dataset.seg;renderRecord();};});
+}
+function renderRecordCalendar(){
+  const v=document.getElementById('view-record');
+  const all=store._r(store.DKEY);
+  if(recCalMonth.y===0){const t=new Date();recCalMonth={y:t.getFullYear(),m:t.getMonth()+1};}
+  const mark=k=>!!all[k];
+  let html='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>あなたが歩いてきた道だよ。ゆっくり、ながめてね。</div></div></div>';
+  html+=segHtml();
+  html+='<div class="cal-head"><div class="nav" id="rc-prev">‹</div><div class="ttl">'+recCalMonth.y+'年 '+recCalMonth.m+'月</div><div class="nav" id="rc-next">›</div></div>';
+  html+=buildCalendar(recCalMonth.y,recCalMonth.m,{selKey:recCalSel,maxKey:null,mark});
+  /* 日タップ詳細: 既存きろくカードを流用 */
+  if(recCalSel){
+    const e=all[recCalSel];
+    const d=new Date(recCalSel+'T00:00:00');
+    if(e){ const card=dailyCardHtml(recCalSel,e,'all'); html+='<div style="margin-top:16px">'+(card||('<div class="rec-card"><div class="rec-date">'+fmtDate(d)+'</div><div class="rec-item">記録はあるけど、表示できる項目がないみたい。</div></div>'))+'</div>'; }
+    else{ html+='<div class="empty" style="margin-top:16px"><span class="kotei" data-kotei="care"></span>'+fmtDate(d)+'<br>この日はおやすみだったんだね。それも大事な一日だよ。</div>'; }
+  }
+  v.innerHTML=html; mountFaces(); wireSeg();
+  const pv=document.getElementById('rc-prev'), nx=document.getElementById('rc-next');
+  pv.onclick=()=>{let{y,m}=recCalMonth;m--;if(m<1){m=12;y--;}recCalMonth={y,m};recCalSel=null;renderRecord();};
+  nx.onclick=()=>{let{y,m}=recCalMonth;m++;if(m>12){m=1;y++;}recCalMonth={y,m};recCalSel=null;renderRecord();};
+  document.querySelectorAll('#view-record [data-cal-day]').forEach(c=>{c.onclick=()=>{recCalSel=c.dataset.calDay;renderRecord();};});
+}
+function renderRecord(){
+  const v=document.getElementById('view-record');
+  const all=store._r(store.DKEY), weeks=store._r(store.WKEY);
+  if(Object.keys(all).length===0 && Object.keys(weeks).length===0){
+    v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>あなたが歩いてきた道だよ。ゆっくり、ながめてね。</div></div></div><div class="empty"><span class="kotei" data-kotei="care"></span>まだ記録がないよ。<br>きょうのタブから、はじめてみよう。</div>';
+    mountFaces(); return;
+  }
+  if(recView==='calendar') renderRecordCalendar();
+  else renderRecordList();
+}
 function renderRecordList(){
   const v=document.getElementById('view-record');
   const all=store._r(store.DKEY);
@@ -529,6 +569,7 @@ function renderRecordList(){
     html+='<div class="empty"><span class="kotei" data-kotei="care"></span>まだ記録がないよ。<br>きょうのタブから、はじめてみよう。</div>';
     v.innerHTML=html; mountFaces(); return;
   }
+  html+=segHtml();
   const FILTERS=[['all','すべて'],['promise','約束'],['jinkaku','人格'],['kimochi','気持ち'],['dekita','できたこと'],['kouken','貢献'],['hitori','ひとり時間'],['weekly','週次']];
   html+='<div class="tags" style="margin:4px 0 14px;">'+FILTERS.map(f=>'<button data-rf="'+f[0]+'" class="'+(recFilter===f[0]?'on':'')+'">'+f[1]+'</button>').join('')+'</div>';
 
@@ -566,6 +607,7 @@ function renderRecordList(){
     if(open) html+='<div>'+grp.cards.map(c=>c.html).join('')+'</div>';
   });
   v.innerHTML=html; mountFaces();
+  wireSeg();
   document.querySelectorAll('[data-rf]').forEach(b=>{b.onclick=()=>{recFilter=b.dataset.rf;renderRecord();};});
   document.querySelectorAll('[data-acc]').forEach(h=>{h.onclick=()=>{const l=h.dataset.acc;if(recOpen.has(l))recOpen.delete(l);else recOpen.add(l);renderRecord();};});
 }
