@@ -311,6 +311,10 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 const Q2_TAGS=['優しかった','頑張った','誠実だった','挑戦した','正直だった','思いやれた','あきらめなかった'];
 const Q3_OPTS=['感情を受け止められた','まだ難しかった','ネガティブはなかった'];
 const todayKey=key(new Date());
+let activeDayKey=todayKey;   /* 日次チェックの対象日。デフォルト今日 */
+let nightPromptDone=false;   /* 深夜「昨日?」プロンプトはセッション中一度だけ */
+let dpOpen=false;            /* 日付ピッカー開閉 */
+let dpMonth={y:0,m:0};       /* ピッカー表示中の年月 */
 let dstate={}; let didx=0;
 const DAILY_SLIDES=[
   {key:'q1', step:'1 / 6 ・ 自分との約束', q:'今日、自分との小さな約束を守れた？', sub:'「自分は約束を守る人間だ」その感覚が、自信を育てるよ。',
@@ -333,15 +337,51 @@ const DAILY_SLIDES=[
   {key:'q6', step:'6 / 6 ・ ひとりの時間', q:'ひとりで楽しめた時間は、あった？', sub:'「ひとり＝寂しい」じゃなく「ひとりも楽しい」を増やそう。',
    render:s=>'<div class="yn"><button data-yn="q6_done" data-v="1" class="'+(s.q6_done===true?'on':'')+'">あった</button><button data-yn="q6_done" data-v="0" class="no '+(s.q6_done===false?'on no':'')+'">なかった</button></div><div class="field-label">何をした？（任意）</div><input type="text" id="q6_note" placeholder="例：カフェ / 映画 / 美術館 / サウナ / 散歩" value="'+esc(s.q6_note||'')+'">'}
 ];
+function dateChipHtml(){
+  const d=new Date(activeDayKey+'T00:00:00');
+  const past=activeDayKey!==todayKey;
+  const cal='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>';
+  return '<div style="display:flex;align-items:center;gap:10px;margin:14px 0 4px;">'
+    +'<button class="date-chip'+(past?' past':'')+'" id="date-chip">'+cal+fmtDate(d)+' ▾</button>'
+    +(past?'<button class="linklike" id="back-today">今日にもどる</button>':'')
+    +'</div>'
+    +(dpOpen?'<div class="cal-pop"><div class="cal-head"><div class="nav" id="dp-prev">‹</div><div class="ttl">'+dpMonth.y+'年 '+dpMonth.m+'月</div><div class="nav" id="dp-next">›</div></div>'
+      +buildCalendar(dpMonth.y,dpMonth.m,{selKey:activeDayKey,maxKey:todayKey,mark:null})+'</div>':'');
+}
+function wireDateChip(){
+  const chip=document.getElementById('date-chip');
+  if(chip)chip.onclick=()=>{ if(!dpOpen){const d=new Date(activeDayKey+'T00:00:00');dpMonth={y:d.getFullYear(),m:d.getMonth()+1};} dpOpen=!dpOpen; renderDaily(); };
+  const bt=document.getElementById('back-today');
+  if(bt)bt.onclick=()=>{activeDayKey=todayKey;dpOpen=false;dstate={};didx=0;renderDaily();};
+  const pv=document.getElementById('dp-prev'), nx=document.getElementById('dp-next');
+  if(pv)pv.onclick=()=>{let{y,m}=dpMonth;m--;if(m<1){m=12;y--;}dpMonth={y,m};renderDaily();};
+  if(nx)nx.onclick=()=>{let{y,m}=dpMonth;m++;if(m>12){m=1;y++;}dpMonth={y,m};renderDaily();};
+  document.querySelectorAll('#view-daily [data-cal-day]').forEach(c=>{c.onclick=()=>{activeDayKey=c.dataset.calDay;dpOpen=false;dstate={};didx=0;renderDaily();};});
+}
 function renderDaily(){
   const v=document.getElementById('view-daily');
-  const existing=store.getDaily(todayKey);
+  /* 深夜0〜5時: 今日を見ていて昨日が未記入なら一度だけ確認 */
+  if(activeDayKey===todayKey && !nightPromptDone && new Date().getHours()<5){
+    const y=new Date();y.setDate(y.getDate()-1);const yKey=key(y);
+    if(!store.getDaily(yKey)){
+      v.innerHTML='<div class="speech warm"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>もしかして、昨日のぶんかな? どっちを書く?</div></div></div>'
+        +'<div class="deck" style="min-height:auto"><div class="deck-nav"><button class="btn ghost" id="np-yest" style="flex:1">昨日を書く</button><button class="btn primary" id="np-today" style="flex:1">今日を書く</button></div></div>';
+      mountFaces();
+      document.getElementById('np-yest').onclick=()=>{nightPromptDone=true;activeDayKey=yKey;dstate={};didx=0;renderDaily();};
+      document.getElementById('np-today').onclick=()=>{nightPromptDone=true;renderDaily();};
+      return;
+    }
+  }
+  const existing=store.getDaily(activeDayKey);
+  const chip=dateChipHtml();
   if(existing && Object.keys(dstate).length===0){
     const fb=kotei.daily(existing);
-    v.innerHTML='<div class="speech warm"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'+fb.head+'</div></div></div><div class="deck"><div class="result"><span class="kotei" data-kotei="cheer"></span><h3>今日の記録、ぜんぶ受けとったよ</h3><p>'+fb.body+'</p><p class="hint">また明日も、待ってるね。</p></div><div class="deck-nav"><button class="btn ghost" id="edit-today">書き直す</button><button class="btn primary" id="go-weekly">こんしゅうを見る</button></div></div>';
+    const isToday=activeDayKey===todayKey;
+    v.innerHTML=chip+'<div class="speech warm"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>'+fb.head+'</div></div></div><div class="deck"><div class="result"><span class="kotei" data-kotei="cheer"></span><h3>'+(isToday?'今日の記録、ぜんぶ受けとったよ':'この日の記録、ぜんぶ受けとってるよ')+'</h3><p>'+fb.body+'</p>'+(isToday?'<p class="hint">また明日も、待ってるね。</p>':'')+'</div><div class="deck-nav"><button class="btn ghost" id="edit-today">書き直す</button>'+(isToday?'<button class="btn primary" id="go-weekly">こんしゅうを見る</button>':'')+'</div></div>';
     mountFaces();
+    wireDateChip();
     document.getElementById('edit-today').onclick=()=>{dstate={...existing};didx=0;renderDeck();};
-    document.getElementById('go-weekly').onclick=()=>switchView('weekly');
+    const gw=document.getElementById('go-weekly');if(gw)gw.onclick=()=>switchView('weekly');
     return;
   }
   renderDeck();
@@ -351,8 +391,9 @@ function renderDeck(){
   const total=DAILY_SLIDES.length;
   const s=DAILY_SLIDES[didx];
   const bars=DAILY_SLIDES.map((_,i)=>'<i class="'+(i<didx?'done':i===didx?'cur':'')+'"></i>').join('');
-  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>むりせず、答えられるところだけでいいからね。</div></div></div><div class="deck"><div class="progress">'+bars+'</div><div class="slide"><div class="step">'+s.step+'</div><p class="q">'+s.q+'</p><p class="sub">'+s.sub+'</p>'+s.render(dstate)+'</div><div class="deck-nav">'+(didx>0?'<button class="btn ghost" id="prev">もどる</button>':'')+'<button class="btn primary" id="next">'+(didx===total-1?'コウテイちゃんに渡す':'つぎへ')+'</button></div></div>';
+  v.innerHTML=dateChipHtml()+'<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>むりせず、答えられるところだけでいいからね。</div></div></div><div class="deck"><div class="progress">'+bars+'</div><div class="slide"><div class="step">'+s.step+'</div><p class="q">'+s.q+'</p><p class="sub">'+s.sub+'</p>'+s.render(dstate)+'</div><div class="deck-nav">'+(didx>0?'<button class="btn ghost" id="prev">もどる</button>':'')+'<button class="btn primary" id="next">'+(didx===total-1?'コウテイちゃんに渡す':'つぎへ')+'</button></div></div>';
   mountFaces();
+  wireDateChip();
   wireSlide(s);
   const prev=document.getElementById('prev'); if(prev)prev.onclick=()=>{captureSlide(s);didx--;renderDeck();};
   document.getElementById('next').onclick=()=>{captureSlide(s);if(didx<total-1){didx++;renderDeck();}else{finishDaily();}};
@@ -375,7 +416,7 @@ function captureSlide(s){
 }
 function finishDaily(){
   const clean={...dstate};
-  store.saveDaily(todayKey, clean);
+  store.saveDaily(activeDayKey, clean);
   dstate={}; didx=0;
   renderDaily();
   scrollTop(true);
@@ -516,7 +557,7 @@ function switchView(view){
   document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
   document.getElementById('view-'+view).classList.add('active');
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
-  if(view==='daily'){dstate={};didx=0;renderDaily();}
+  if(view==='daily'){dstate={};didx=0;activeDayKey=todayKey;dpOpen=false;renderDaily();}
   if(view==='weekly'){wstate={};renderWeekly();}
   if(view==='record'){renderRecord();}
   if(view==='settings'){delMode=false;renderSettings();}
