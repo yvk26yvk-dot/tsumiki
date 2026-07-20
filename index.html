@@ -22,11 +22,10 @@
   html,body{margin:0;padding:0;}
   html{background:var(--bg);}
   body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--ink);line-height:1.75;-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
-  /* ネイティブ(Capacitor): Dynamic Island/ノッチに隠れないよう上部余白を最低値つき保証。envが効けばenv採用 */
-  /* overscroll-behavior-y:none — 短い画面での引っ張り(下地の黒が露出する遊び)を止める。
-     長い画面(きろく等)のスクロールと端の標準バウンスは残る。PWA側は理想の挙動なので変えない(native限定) */
-  html.native{overscroll-behavior-y:none;}
-  body.native{padding-top:max(env(safe-area-inset-top),44px);overscroll-behavior-y:none;}
+  /* ネイティブ(Capacitor): Dynamic Island/ノッチに隠れないよう上部余白を最低値つき保証。envが効けばenv採用。
+     オーバースクロールの弾力(ラバーバンド)はWeb版と同じに残す。端で露出する下地の色は
+     ネイティブ側(WKWebViewのunderPageBackgroundColor等)で生成りにする(AppDelegate.swift) */
+  body.native{padding-top:max(env(safe-area-inset-top),44px);}
   .app{max-width:480px;margin:0 auto;padding:0 18px 120px;}
   .kotei{display:inline-block;line-height:0;}
   .kotei svg{display:block;}
@@ -166,7 +165,6 @@ if(NATIVE){
   /* ネイティブのみ: セーフエリア余白のためのクラス+ピンチ/自動ズーム無効化。
      Web/PWA側はアクセシビリティのためviewportを変えない */
   document.body.classList.add('native');
-  document.documentElement.classList.add('native');
   const vp=document.querySelector('meta[name=viewport]');
   if(vp)vp.setAttribute('content','width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no');
 }

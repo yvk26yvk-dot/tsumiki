@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -46,4 +47,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+}
+
+// WebViewの下地(オーバースクロールで露出する領域)を黒でなく生成り(#FBF4EF)にする。
+// 弾力(ラバーバンド)自体はWeb版と同じに残し、露出する色だけをネイティブ側で差し替える。
+class MainViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        let cream = UIColor(red: 251.0/255.0, green: 244.0/255.0, blue: 239.0/255.0, alpha: 1.0)
+        view.backgroundColor = cream
+        webView?.isOpaque = false
+        webView?.backgroundColor = cream
+        webView?.scrollView.backgroundColor = cream
+        if #available(iOS 15.0, *) {
+            webView?.underPageBackgroundColor = cream
+        }
+    }
 }
