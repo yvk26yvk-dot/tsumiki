@@ -42,6 +42,12 @@ index.html 内に、意図的に隔離された2つの層がある。**この隔
 - main への push で GitHub Pages に自動デプロイ(反映まで1〜2分)
 - データを保存する localStorage キー: kotei.daily.v1 / kotei.weekly.v1 / kotei.promise.v1
   スキーマを変えるときは必ず既存データの移行処理を書く(ユーザーの記録を消さない)
+- ネイティブ(Capacitor)の開発フロー:
+  - web側はこれまで通り index.html を直接編集(ビルドなし)。main push で Pages に反映
+  - ネイティブ確認は `npm run sync`(www/へ資産コピー+cap sync)→ `npx cap open ios` → Xcodeで実行
+  - www/ と node_modules/ は生成物(コミットしない)。ios/ はコミット対象
+  - webの更新はPagesに即反映されるが、アプリ内のWebは**アプリ更新まで変わらない**(反映が2系統で独立)
+  - sw.js はネイティブに同梱しない(WKWebViewはSW非対応。index.htmlのNATIVEガードで登録もスキップ)
 
 ## コミットしてはいけないもの
 - APIキー、シークレット類(.env は .gitignore に入れる)

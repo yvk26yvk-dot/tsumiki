@@ -20,7 +20,16 @@
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
+  html{background:var(--bg);}
   body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--ink);line-height:1.75;-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
+  /* ネイティブ(Capacitor): ページ(body/html)自体はスクロールさせず画面に固定し、内側の .app だけを
+     スクロールコンテナにする。これで「短い画面は1pxも動かない/長い画面はスクロール&端で戻る/
+     ページ全体がズレたまま止まることが起きない」を構造的に保証する。上部余白はセーフエリア分。
+     露出する下地の色はネイティブ側(underPageBackgroundColor)で生成りに(AppDelegate.swift)。
+     PWA(nativeクラスなし)は現状のbodyスクロールのまま無変更 */
+  html.native,body.native{height:100%;overflow:hidden;}
+  body.native{padding-top:max(env(safe-area-inset-top),44px);}
+  body.native .app{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;}
   .app{max-width:480px;margin:0 auto;padding:0 18px 120px;}
   .kotei{display:inline-block;line-height:0;}
   .kotei svg{display:block;}
@@ -54,7 +63,7 @@
   .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
   .tags button{padding:9px 15px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);font-family:inherit;font-size:14px;color:var(--ink-soft);cursor:pointer;transition:all .16s;}
   .tags button.on{border-color:var(--rose);background:var(--rose-soft);color:var(--rose-deep);font-weight:600;}
-  textarea,input[type=text],input[type=email],input[type=password]{width:100%;font-family:inherit;font-size:15px;line-height:1.7;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:13px 15px;outline:none;transition:border-color .16s;}
+  textarea,input[type=text],input[type=email],input[type=password]{width:100%;font-family:inherit;font-size:16px;line-height:1.7;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:13px 15px;outline:none;transition:border-color .16s;}
   textarea{resize:vertical;min-height:82px;}
   textarea:focus,input[type=text]:focus,input[type=email]:focus,input[type=password]:focus{border-color:var(--rose);}
   textarea::placeholder,input::placeholder{color:var(--ink-faint);}
@@ -155,6 +164,21 @@
 </nav>
 <script src="supabase.min.js"></script>
 <script>
+const NATIVE=location.protocol==='capacitor:';
+if(NATIVE){
+  /* ネイティブのみ: セーフエリア余白のためのクラス+ピンチ/自動ズーム無効化。
+     Web/PWA側はアクセシビリティのためviewportを変えない */
+  document.body.classList.add('native');
+  document.documentElement.classList.add('native');
+  const vp=document.querySelector('meta[name=viewport]');
+  if(vp)vp.setAttribute('content','width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no');
+}
+/* ネイティブはbody固定・.appがスクロールコンテナなので、先頭スクロールは.appに向ける。
+   Web/PWAは従来どおりwindowをスクロール */
+function scrollTop(smooth){
+  const el=NATIVE?document.querySelector('.app'):window;
+  if(el)el.scrollTo({top:0,behavior:smooth?'smooth':'auto'});
+}
 const SUPABASE_URL='https://zfntwysyrioqxznlhxhm.supabase.co';
 const SUPABASE_KEY='sb_publishable_OKH_JjMgl8814Xye_3QhwQ_q4JBxa1K';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -305,7 +329,7 @@ function finishDaily(){
   store.saveDaily(todayKey, clean);
   dstate={}; didx=0;
   renderDaily();
-  window.scrollTo({top:0,behavior:'smooth'});
+  scrollTop(true);
 }
 const PILLARS=['恋愛','仕事','友達','趣味','運動','旅行','勉強','家族'];
 const thisWeek=weekKey(new Date());
@@ -348,7 +372,7 @@ function renderWeekly(){
   v.innerHTML=html;
   mountFaces();
   const sw=document.getElementById('start-weekly');
-  if(sw)sw.onclick=()=>{wstate._filling=true;renderWeekly();window.scrollTo(0,0);};
+  if(sw)sw.onclick=()=>{wstate._filling=true;renderWeekly();scrollTop(false);};
 }
 function renderWeeklyForm(saved){
   const v=document.getElementById('view-weekly');
@@ -356,11 +380,11 @@ function renderWeeklyForm(saved){
   const sp=(saved&&saved.pillars)||{};
   const sm=(saved&&saved.pmemos)||{};
   const sg=(saved&&saved.goods)||[];
-  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>週に一度、すこし大きな目で自分を見てみよう。全部埋めなくていいからね。</div></div></div><div class="deck"><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin-bottom:8px;">週次チェック 1 / 2 ・ 人生の柱</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">今週、それぞれの柱はどのくらい充実してた？</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">柱が多いほど、ひとつ折れても倒れない。</p><div id="pillars">'+PILLARS.map(p=>'<div class="pillar"><div class="top"><b>'+p+'</b><span class="val" id="v-'+p+'">'+esc(sp[p]!=null?sp[p]:3)+'</span></div><input type="range" min="0" max="5" step="1" value="'+esc(sp[p]!=null?sp[p]:3)+'" data-pillar="'+p+'"><input type="text" data-pmemo="'+p+'" placeholder="ひとことメモ（任意）" style="margin-top:7px;font-size:13px;" value="'+esc(sm[p]||'')+'"></div>').join('')+'</div><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin:18px 0 8px;">週次チェック 2 / 2 ・ 人生の面積</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">柱が1本なくても、今週よかったこと</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">いくつでもいい。書いた数だけ、人生の面積が広がるよ。</p><div class="ten" id="goods">'+Array.from({length:10}).map((_,i)=>'<input type="text" data-good="'+i+'" placeholder="'+(i+1)+'. '+goodPH[i]+'" value="'+esc(sg[i]||'')+'">').join('')+'</div><div class="deck-nav"><button class="btn ghost" id="cancel-weekly">やめる</button><button class="btn primary" id="save-weekly">コウテイちゃんに渡す</button></div></div>';
+  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>週に一度、すこし大きな目で自分を見てみよう。全部埋めなくていいからね。</div></div></div><div class="deck"><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin-bottom:8px;">週次チェック 1 / 2 ・ 人生の柱</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">今週、それぞれの柱はどのくらい充実してた？</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">柱が多いほど、ひとつ折れても倒れない。</p><div id="pillars">'+PILLARS.map(p=>'<div class="pillar"><div class="top"><b>'+p+'</b><span class="val" id="v-'+p+'">'+esc(sp[p]!=null?sp[p]:3)+'</span></div><input type="range" min="0" max="5" step="1" value="'+esc(sp[p]!=null?sp[p]:3)+'" data-pillar="'+p+'"><input type="text" data-pmemo="'+p+'" placeholder="ひとことメモ（任意）" style="margin-top:7px;font-size:16px;" value="'+esc(sm[p]||'')+'"></div>').join('')+'</div><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin:18px 0 8px;">週次チェック 2 / 2 ・ 人生の面積</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">柱が1本なくても、今週よかったこと</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">いくつでもいい。書いた数だけ、人生の面積が広がるよ。</p><div class="ten" id="goods">'+Array.from({length:10}).map((_,i)=>'<input type="text" data-good="'+i+'" placeholder="'+(i+1)+'. '+goodPH[i]+'" value="'+esc(sg[i]||'')+'">').join('')+'</div><div class="deck-nav"><button class="btn ghost" id="cancel-weekly">やめる</button><button class="btn primary" id="save-weekly">コウテイちゃんに渡す</button></div></div>';
   mountFaces();
   document.querySelectorAll('[data-pillar]').forEach(r=>{r.oninput=()=>document.getElementById('v-'+r.dataset.pillar).textContent=r.value;});
   document.getElementById('save-weekly').onclick=saveWeekly;
-  document.getElementById('cancel-weekly').onclick=()=>{wstate._filling=false;renderWeekly();window.scrollTo(0,0);};
+  document.getElementById('cancel-weekly').onclick=()=>{wstate._filling=false;renderWeekly();scrollTop(false);};
 }
 function saveWeekly(){
   const pillars={};
@@ -370,7 +394,7 @@ function saveWeekly(){
   store.saveWeekly(thisWeek,{pillars,pmemos,goods});
   wstate={_filling:false};
   renderWeekly();
-  window.scrollTo({top:0,behavior:'smooth'});
+  scrollTop(true);
 }
 /* =====================================================================
    RECORD — 過去の自由記述をすべて日付つきで一覧する「きろく」ページ。
@@ -447,7 +471,7 @@ function switchView(view){
   if(view==='weekly'){wstate={};renderWeekly();}
   if(view==='record'){renderRecord();}
   if(view==='settings'){delMode=false;renderSettings();}
-  window.scrollTo(0,0);
+  scrollTop(false);
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
 document.getElementById('header-gear').onclick=()=>switchView('settings');
@@ -558,7 +582,9 @@ async function doAuth(){
   let res;
   if(mode==='signup')res=await sb.auth.signUp({email,password:pw});
   else if(mode==='login')res=await sb.auth.signInWithPassword({email,password:pw});
-  else if(mode==='forgot')res=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname.replace(/index\.html$/,'')});
+  /* ネイティブ: capacitor://はメールリンクの戻り先にできないため本番PWAへ。
+     Safariで再設定→アプリに戻って新パスワードでログインする流れ */
+  else if(mode==='forgot')res=await sb.auth.resetPasswordForEmail(email,{redirectTo:NATIVE?'https://yvk26yvk-dot.github.io/tsumiki/':location.origin+location.pathname.replace(/index\.html$/,'')});
   else res=await sb.auth.updateUser({password:pw});
   if(res.error){
     let msg;
@@ -685,7 +711,7 @@ sb.auth.onAuthStateChange((event)=>{
   if(session){enterApp();}else{renderAuth();}
 })();
 window.addEventListener('online',()=>store.flush());
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+if('serviceWorker' in navigator && !NATIVE){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
 </script>
 </body>
 </html>

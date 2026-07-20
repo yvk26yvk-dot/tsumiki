@@ -1,0 +1,33 @@
+{
+  "name": "tsumiki",
+  "version": "1.0.0",
+  "description": "毎日の小さな問いかけに答えると、コウテイちゃん（あたたかい母性キャラ）が やさしくフィードバック。自己肯定感をすこしずつ育てるアプリ。",
+  "main": "supabase.min.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "sync": "bash scripts/sync-www.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yvk26yvk-dot/tsumiki.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/yvk26yvk-dot/tsumiki/issues"
+  },
+  "homepage": "https://github.com/yvk26yvk-dot/tsumiki#readme",
+  "dependencies": {
+    "@capacitor/core": "^7.6.7",
+    "@capacitor/ios": "^7.6.7"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.6.7"
+  },
+  "private": true
+}

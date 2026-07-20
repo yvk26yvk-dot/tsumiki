@@ -1,0 +1,10 @@
+{
+  "appId": "com.kouteichan.app",
+  "appName": "コウテイちゃん",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#FBF4EF"
+  },
+  "backgroundColor": "#FBF4EF"
+}
