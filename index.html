@@ -492,65 +492,82 @@ function saveWeekly(){
    ===================================================================== */
 const Q3_LABELS=['感情を受け止められた','まだ難しかった','ネガティブはなかった'];
 let recFilter='all';
-function renderRecord(){
+let recOpen=null;   /* 開いている月ラベルのSet。null=未初期化(初回に今月だけ開く) */
+/* 1日ぶんのきろくカード。filterで項目を絞る。該当なしは''を返す */
+function dailyCardHtml(dateKey,e,filter){
+  filter=filter||'all';
+  const d=new Date(dateKey+'T00:00:00');
+  let items=[];
+  if((filter==='all'||filter==='promise') && e.q1_promise&&e.q1_promise.trim()) items.push('<div class="rec-item"><b>自分との約束</b> '+esc(e.q1_promise)+(e.q1_done?' <span class="rec-tag ok">守れた</span>':'')+'</div>');
+  if((filter==='all'||filter==='jinkaku') && (e.q2_tags||[]).length) items.push('<div class="rec-item"><b>磨けた人格</b> '+e.q2_tags.map(esc).join('・')+(e.q2_note?'<br><span class="rec-note">'+esc(e.q2_note)+'</span>':'')+'</div>');
+  if((filter==='all'||filter==='kimochi') && e.q3_note&&e.q3_note.trim()) items.push('<div class="rec-item"><b>気持ち</b> '+(e.q3_pick!=null?'<span class="rec-tag">'+Q3_LABELS[e.q3_pick]+'</span> ':'')+'<br><span class="rec-note">'+esc(e.q3_note)+'</span></div>');
+  if((filter==='all'||filter==='dekita') && e.q4_note&&e.q4_note.trim()) items.push('<div class="rec-item"><b>できたこと</b><br><span class="rec-note">'+esc(e.q4_note)+'</span></div>');
+  if((filter==='all'||filter==='kouken') && e.q5_note&&e.q5_note.trim()) items.push('<div class="rec-item"><b>人への貢献</b><br><span class="rec-note">'+esc(e.q5_note)+'</span></div>');
+  if((filter==='all'||filter==='hitori') && e.q6_note&&e.q6_note.trim()) items.push('<div class="rec-item"><b>ひとり時間</b><br><span class="rec-note">'+esc(e.q6_note)+'</span></div>');
+  if(!items.length) return '';
+  return '<div class="rec-card"><div class="rec-date">'+fmtDate(d)+'</div>'+items.join('')+'</div>';
+}
+/* 週次カード(「週」バッジ付き) */
+function weeklyCardHtml(wk,w){
+  const label=wk.replace('W','')+' の週';
+  let parts=[];
+  const pmemos=w.pmemos||{}, pk=Object.keys(pmemos);
+  if(pk.length) parts.push('<div class="rec-item"><b>柱のメモ</b><br>'+pk.map(k=>'<span class="rec-note">'+esc(k)+'：'+esc(pmemos[k])+'</span>').join('<br>')+'</div>');
+  const goods=(w.goods||[]).filter(g=>g&&g.trim());
+  if(goods.length) parts.push('<div class="rec-item"><b>よかったこと '+goods.length+'個</b><br><span class="rec-note">'+goods.map(esc).join('<br>')+'</span></div>');
+  if(!parts.length) return '';
+  return '<div class="rec-card"><div class="rec-date"><span class="rec-tag">週</span> '+label+'</div>'+parts.join('')+'</div>';
+}
+function renderRecord(){ renderRecordList(); }
+function renderRecordList(){
   const v=document.getElementById('view-record');
   const all=store._r(store.DKEY);
   const dates=Object.keys(all).sort().reverse();
   const weeks=store._r(store.WKEY);
   let html='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>あなたが歩いてきた道だよ。ゆっくり、ながめてね。</div></div></div>';
-
   if(dates.length===0 && Object.keys(weeks).length===0){
     html+='<div class="empty"><span class="kotei" data-kotei="care"></span>まだ記録がないよ。<br>きょうのタブから、はじめてみよう。</div>';
     v.innerHTML=html; mountFaces(); return;
   }
-
-  /* フィルタチップ */
   const FILTERS=[['all','すべて'],['promise','約束'],['jinkaku','人格'],['kimochi','気持ち'],['dekita','できたこと'],['kouken','貢献'],['hitori','ひとり時間'],['weekly','週次']];
   html+='<div class="tags" style="margin:4px 0 14px;">'+FILTERS.map(f=>'<button data-rf="'+f[0]+'" class="'+(recFilter===f[0]?'on':'')+'">'+f[1]+'</button>').join('')+'</div>';
 
-  /* 日次：月ごとにグループ */
+  /* 月ごとに日次カードと週次カードを束ねる。並びは月降順、月内は日付降順 */
+  const months={};       /* 'YYYY年M月' -> {key:'YYYY-MM', cards:[{sort, html}]} */
+  const monthLabel=(y,m)=>y+'年'+m+'月';
   if(recFilter!=='weekly'){
-    let curMonth='';
-    let dailyHtml='';
     dates.forEach(dk=>{
-      const e=all[dk];
+      const card=dailyCardHtml(dk,all[dk],recFilter);
+      if(!card)return;
       const d=new Date(dk+'T00:00:00');
-      let items=[];
-      if((recFilter==='all'||recFilter==='promise') && e.q1_promise&&e.q1_promise.trim()) items.push('<div class="rec-item"><b>自分との約束</b> '+esc(e.q1_promise)+(e.q1_done?' <span class="rec-tag ok">守れた</span>':'')+'</div>');
-      if((recFilter==='all'||recFilter==='jinkaku') && (e.q2_tags||[]).length) items.push('<div class="rec-item"><b>磨けた人格</b> '+e.q2_tags.map(esc).join('・')+(e.q2_note?'<br><span class="rec-note">'+esc(e.q2_note)+'</span>':'')+'</div>');
-      if((recFilter==='all'||recFilter==='kimochi') && e.q3_note&&e.q3_note.trim()) items.push('<div class="rec-item"><b>気持ち</b> '+(e.q3_pick!=null?'<span class="rec-tag">'+Q3_LABELS[e.q3_pick]+'</span> ':'')+'<br><span class="rec-note">'+esc(e.q3_note)+'</span></div>');
-      if((recFilter==='all'||recFilter==='dekita') && e.q4_note&&e.q4_note.trim()) items.push('<div class="rec-item"><b>できたこと</b><br><span class="rec-note">'+esc(e.q4_note)+'</span></div>');
-      if((recFilter==='all'||recFilter==='kouken') && e.q5_note&&e.q5_note.trim()) items.push('<div class="rec-item"><b>人への貢献</b><br><span class="rec-note">'+esc(e.q5_note)+'</span></div>');
-      if((recFilter==='all'||recFilter==='hitori') && e.q6_note&&e.q6_note.trim()) items.push('<div class="rec-item"><b>ひとり時間</b><br><span class="rec-note">'+esc(e.q6_note)+'</span></div>');
-      if(items.length===0) return;
-      const mLabel=d.getFullYear()+'年'+(d.getMonth()+1)+'月';
-      if(mLabel!==curMonth){curMonth=mLabel;dailyHtml+='<div class="rec-month">'+mLabel+'</div>';}
-      dailyHtml+='<div class="rec-card"><div class="rec-date">'+fmtDate(d)+'</div>'+items.join('')+'</div>';
+      const lab=monthLabel(d.getFullYear(),d.getMonth()+1);
+      (months[lab]=months[lab]||{key:dk.slice(0,7),cards:[]}).cards.push({sort:dk,html:card});
     });
-    if(dailyHtml){html+='<div class="section-label">日々のきろく</div>'+dailyHtml;}
   }
-
-  /* 週次 */
   if(recFilter==='all'||recFilter==='weekly'){
-    const wkeys=Object.keys(weeks).sort().reverse();
-    let weekHtml='';
-    wkeys.forEach(wk=>{
-      const w=weeks[wk];
-      const label=wk.replace('W','')+' の週';
-      let parts=[];
-      const pmemos=w.pmemos||{};
-      const pmemoKeys=Object.keys(pmemos);
-      if(pmemoKeys.length) parts.push('<div class="rec-item"><b>柱のメモ</b><br>'+pmemoKeys.map(k=>'<span class="rec-note">'+esc(k)+'：'+esc(pmemos[k])+'</span>').join('<br>')+'</div>');
-      const goods=(w.goods||[]).filter(g=>g&&g.trim());
-      if(goods.length) parts.push('<div class="rec-item"><b>よかったこと '+goods.length+'個</b><br><span class="rec-note">'+goods.map(esc).join('<br>')+'</span></div>');
-      if(parts.length===0) return;
-      weekHtml+='<div class="rec-card"><div class="rec-date">'+label+'</div>'+parts.join('')+'</div>';
+    Object.keys(weeks).forEach(wk=>{
+      const card=weeklyCardHtml(wk,weeks[wk]);
+      if(!card)return;
+      const mon=new Date(wk.replace('W','')+'T00:00:00');   /* 週の月曜日 */
+      const lab=monthLabel(mon.getFullYear(),mon.getMonth()+1);
+      (months[lab]=months[lab]||{key:wk.replace('W','').slice(0,7),cards:[]}).cards.push({sort:wk.replace('W',''),html:card});
     });
-    if(weekHtml){html+='<div class="section-label">週次のきろく</div>'+weekHtml;}
   }
-
+  const labels=Object.keys(months).sort((a,b)=>months[b].key.localeCompare(months[a].key));
+  if(recOpen===null){ recOpen=new Set(labels.length?[labels[0]]:[]); }  /* 初回は今月(=最新)だけ開く */
+  if(!labels.length){
+    html+='<div class="empty" style="padding:20px 0">この条件の記録はまだないよ。</div>';
+  }
+  labels.forEach(lab=>{
+    const grp=months[lab];
+    grp.cards.sort((a,b)=>b.sort.localeCompare(a.sort));
+    const open=recOpen.has(lab);
+    html+='<div class="acc-head'+(open?' open':'')+'" data-acc="'+esc(lab)+'"><span>'+lab+' <span class="cnt">'+grp.cards.length+'件</span></span><span class="chev">›</span></div>';
+    if(open) html+='<div>'+grp.cards.map(c=>c.html).join('')+'</div>';
+  });
   v.innerHTML=html; mountFaces();
   document.querySelectorAll('[data-rf]').forEach(b=>{b.onclick=()=>{recFilter=b.dataset.rf;renderRecord();};});
+  document.querySelectorAll('[data-acc]').forEach(h=>{h.onclick=()=>{const l=h.dataset.acc;if(recOpen.has(l))recOpen.delete(l);else recOpen.add(l);renderRecord();};});
 }
 
 function switchView(view){
