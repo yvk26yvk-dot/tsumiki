@@ -20,7 +20,10 @@
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
+  html{background:var(--bg);}
   body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--ink);line-height:1.75;-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
+  /* ネイティブ(Capacitor): Dynamic Island/ノッチに隠れないよう上部余白を最低値つき保証。envが効けばenv採用 */
+  body.native{padding-top:max(env(safe-area-inset-top),44px);}
   .app{max-width:480px;margin:0 auto;padding:0 18px 120px;}
   .kotei{display:inline-block;line-height:0;}
   .kotei svg{display:block;}
@@ -54,7 +57,7 @@
   .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
   .tags button{padding:9px 15px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);font-family:inherit;font-size:14px;color:var(--ink-soft);cursor:pointer;transition:all .16s;}
   .tags button.on{border-color:var(--rose);background:var(--rose-soft);color:var(--rose-deep);font-weight:600;}
-  textarea,input[type=text],input[type=email],input[type=password]{width:100%;font-family:inherit;font-size:15px;line-height:1.7;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:13px 15px;outline:none;transition:border-color .16s;}
+  textarea,input[type=text],input[type=email],input[type=password]{width:100%;font-family:inherit;font-size:16px;line-height:1.7;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:13px 15px;outline:none;transition:border-color .16s;}
   textarea{resize:vertical;min-height:82px;}
   textarea:focus,input[type=text]:focus,input[type=email]:focus,input[type=password]:focus{border-color:var(--rose);}
   textarea::placeholder,input::placeholder{color:var(--ink-faint);}
@@ -156,6 +159,13 @@
 <script src="supabase.min.js"></script>
 <script>
 const NATIVE=location.protocol==='capacitor:';
+if(NATIVE){
+  /* ネイティブのみ: セーフエリア余白のためのクラス+ピンチ/自動ズーム無効化。
+     Web/PWA側はアクセシビリティのためviewportを変えない */
+  document.body.classList.add('native');
+  const vp=document.querySelector('meta[name=viewport]');
+  if(vp)vp.setAttribute('content','width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no');
+}
 const SUPABASE_URL='https://zfntwysyrioqxznlhxhm.supabase.co';
 const SUPABASE_KEY='sb_publishable_OKH_JjMgl8814Xye_3QhwQ_q4JBxa1K';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -357,7 +367,7 @@ function renderWeeklyForm(saved){
   const sp=(saved&&saved.pillars)||{};
   const sm=(saved&&saved.pmemos)||{};
   const sg=(saved&&saved.goods)||[];
-  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>週に一度、すこし大きな目で自分を見てみよう。全部埋めなくていいからね。</div></div></div><div class="deck"><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin-bottom:8px;">週次チェック 1 / 2 ・ 人生の柱</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">今週、それぞれの柱はどのくらい充実してた？</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">柱が多いほど、ひとつ折れても倒れない。</p><div id="pillars">'+PILLARS.map(p=>'<div class="pillar"><div class="top"><b>'+p+'</b><span class="val" id="v-'+p+'">'+esc(sp[p]!=null?sp[p]:3)+'</span></div><input type="range" min="0" max="5" step="1" value="'+esc(sp[p]!=null?sp[p]:3)+'" data-pillar="'+p+'"><input type="text" data-pmemo="'+p+'" placeholder="ひとことメモ（任意）" style="margin-top:7px;font-size:13px;" value="'+esc(sm[p]||'')+'"></div>').join('')+'</div><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin:18px 0 8px;">週次チェック 2 / 2 ・ 人生の面積</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">柱が1本なくても、今週よかったこと</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">いくつでもいい。書いた数だけ、人生の面積が広がるよ。</p><div class="ten" id="goods">'+Array.from({length:10}).map((_,i)=>'<input type="text" data-good="'+i+'" placeholder="'+(i+1)+'. '+goodPH[i]+'" value="'+esc(sg[i]||'')+'">').join('')+'</div><div class="deck-nav"><button class="btn ghost" id="cancel-weekly">やめる</button><button class="btn primary" id="save-weekly">コウテイちゃんに渡す</button></div></div>';
+  v.innerHTML='<div class="speech"><div class="row"><span class="kotei" data-kotei></span><div class="msg"><div class="name">コウテイちゃん</div>週に一度、すこし大きな目で自分を見てみよう。全部埋めなくていいからね。</div></div></div><div class="deck"><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin-bottom:8px;">週次チェック 1 / 2 ・ 人生の柱</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">今週、それぞれの柱はどのくらい充実してた？</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">柱が多いほど、ひとつ折れても倒れない。</p><div id="pillars">'+PILLARS.map(p=>'<div class="pillar"><div class="top"><b>'+p+'</b><span class="val" id="v-'+p+'">'+esc(sp[p]!=null?sp[p]:3)+'</span></div><input type="range" min="0" max="5" step="1" value="'+esc(sp[p]!=null?sp[p]:3)+'" data-pillar="'+p+'"><input type="text" data-pmemo="'+p+'" placeholder="ひとことメモ（任意）" style="margin-top:7px;font-size:16px;" value="'+esc(sm[p]||'')+'"></div>').join('')+'</div><div class="step" style="font-size:12px;color:var(--ink-faint);letter-spacing:.08em;margin:18px 0 8px;">週次チェック 2 / 2 ・ 人生の面積</div><p class="q" style="font-size:18px;font-weight:700;margin:0 0 4px;">柱が1本なくても、今週よかったこと</p><p class="sub" style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">いくつでもいい。書いた数だけ、人生の面積が広がるよ。</p><div class="ten" id="goods">'+Array.from({length:10}).map((_,i)=>'<input type="text" data-good="'+i+'" placeholder="'+(i+1)+'. '+goodPH[i]+'" value="'+esc(sg[i]||'')+'">').join('')+'</div><div class="deck-nav"><button class="btn ghost" id="cancel-weekly">やめる</button><button class="btn primary" id="save-weekly">コウテイちゃんに渡す</button></div></div>';
   mountFaces();
   document.querySelectorAll('[data-pillar]').forEach(r=>{r.oninput=()=>document.getElementById('v-'+r.dataset.pillar).textContent=r.value;});
   document.getElementById('save-weekly').onclick=saveWeekly;
